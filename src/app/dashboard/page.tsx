@@ -2,7 +2,21 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { redirect } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
-import { CalendarDays, ClipboardList, Target } from 'lucide-react';
+import { CalendarDays, ClipboardList, Target, ShieldCheck } from 'lucide-react';
+
+const adminCard = {
+  href: '/admin',
+  icon: ShieldCheck,
+  iconBg: 'bg-gradient-to-br from-orange-400 to-orange-600',
+  title: 'Administração',
+  description:
+    'Gerencie as contas do sistema: crie alunos (com sala e série), professores e administradores, e exclua contas quando necessário.',
+  tag: 'Gestão de Contas',
+  tagColor: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  borderHover: 'hover:border-orange-200 dark:hover:border-orange-800',
+  shadow: 'hover:shadow-orange-100 dark:hover:shadow-orange-900/20',
+  sameTab: true,
+};
 
 const cards = [
   {
@@ -48,6 +62,7 @@ export default async function DashboardPage() {
   if (!session) redirect('/');
 
   const levelLabel = session.user.level === 'FUNDAMENTAL' ? 'Ensino Fundamental' : 'Ensino Médio';
+  const visibleCards = session.user.role === 'ADMIN' ? [...cards, adminCard] : cards;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
@@ -71,14 +86,15 @@ export default async function DashboardPage() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cards.map((card) => {
+          {visibleCards.map((card) => {
             const Icon = card.icon;
+            const sameTab = 'sameTab' in card && card.sameTab;
             return (
               <a
                 key={card.href}
                 href={card.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                target={sameTab ? undefined : '_blank'}
+                rel={sameTab ? undefined : 'noopener noreferrer'}
                 className={`group card p-6 flex flex-col gap-5 border-2 border-transparent ${card.borderHover} hover:shadow-xl ${card.shadow} transition-all duration-300 cursor-pointer`}
               >
                 <div className="flex items-start justify-between">

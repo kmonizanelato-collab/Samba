@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 async function main() {
   const studentPassword = await bcrypt.hash('aluno@2026', 10);
   const teacherPassword = await bcrypt.hash('professor@2026', 10);
+  const adminPassword = await bcrypt.hash('admin@2026', 10);
 
   await prisma.gradeGoal.deleteMany();
   await prisma.grade.deleteMany();
@@ -15,6 +16,10 @@ async function main() {
 
   await prisma.user.create({
     data: { name: 'Vinicios', role: Role.TEACHER, password: teacherPassword },
+  });
+
+  await prisma.user.create({
+    data: { name: 'admin', role: Role.ADMIN, password: adminPassword },
   });
 
   const medioStudents = [

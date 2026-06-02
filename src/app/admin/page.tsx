@@ -1,0 +1,18 @@
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { Navbar } from '@/components/Navbar';
+import { AdminClient } from '@/components/admin/AdminClient';
+
+export default async function AdminPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect('/');
+  if (session.user.role !== 'ADMIN') redirect('/dashboard');
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <Navbar />
+      <AdminClient session={session} />
+    </div>
+  );
+}
