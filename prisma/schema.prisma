@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  role      Role     @default(STUDENT)
+  grade     String?
+  level     Level?
+  password  String
+  createdAt DateTime @default(now())
+
+  agendaEntries      AgendaEntry[]
+  grades             Grade[]
+  gradeGoals         GradeGoal[]
+  studentAttendance  StudentAttendance[]
+
+  @@unique([name, grade], name: "nameGrade")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum Level {
+  MEDIO
+  FUNDAMENTAL
+}
+
+model AgendaEntry {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  timeSlot   String
+  activity   String?
+  customText String?
+  color      String?  @default("#2563eb")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, date, timeSlot])
+}
+
+model Grade {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject          String
+  bimester         Int
+  nota             Float?
+  faltas           Int      @default(0)
+  ac               Float    @default(0)
+  aulasMinistradas Int      @default(50)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([userId, subject, bimester])
+}
+
+model GradeGoal {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  bimester  Int
+  metaNota  Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, subject, bimester])
+}
+
+model StudentAttendance {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year         Int
+  diasFaltados Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, year])
+}
