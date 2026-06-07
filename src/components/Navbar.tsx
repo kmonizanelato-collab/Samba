@@ -1,8 +1,9 @@
 'use client';
 import { signOut, useSession } from 'next-auth/react';
 import { ThemeToggle } from './ThemeToggle';
-import { LogOut, Home, BookOpen, User2 } from 'lucide-react';
+import { LogOut, Home, User2 } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from './Logo';
 
 const roleBadge: Record<string, { label: string; cls: string }> = {
   STUDENT: { label: 'Aluno', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
@@ -20,13 +21,8 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-gray-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md">
-              <BookOpen size={18} className="text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-500 bg-clip-text text-transparent">
-              SAMBA
-            </span>
+          <Link href="/dashboard" className="group">
+            <Logo variant="bar" />
           </Link>
 
           <div className="flex items-center gap-3">

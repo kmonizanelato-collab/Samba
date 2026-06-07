@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, GraduationCap, User2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { GraduationCap, User2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo } from '@/components/Logo';
 import { GRADES_LIST } from '@/lib/constants';
 
 type RoleTab = 'STUDENT' | 'TEACHER' | 'ADMIN';
@@ -56,14 +57,9 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md">
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 shadow-xl mb-4">
-            <BookOpen size={30} className="text-white" />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-            SAMBA
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
+        <div className="flex flex-col items-center mb-8">
+          <Logo variant="hero" />
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-3">
             Sistema de Acompanhamento do Aluno
           </p>
         </div>
