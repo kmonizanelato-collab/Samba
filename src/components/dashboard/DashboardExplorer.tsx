@@ -57,14 +57,26 @@ const ACCENTS: Record<string, Accent> = {
   },
 };
 
-/** Ícone estilo "app": gradiente vívido + brilho superior + sombra colorida */
+/** Ícone estilo "app": gradiente vívido, brilho/reflexo, borda interna e sombra colorida */
 function AppIcon({ icon: Icon, accent, big = false }: { icon: LucideIcon; accent: keyof typeof ACCENTS; big?: boolean }) {
   const a = ACCENTS[accent];
-  const box = big ? 'w-16 h-16 rounded-[20px]' : 'w-12 h-12 rounded-[15px]';
+  const box = big ? 'w-[60px] h-[60px] rounded-[19px]' : 'w-12 h-12 rounded-[15px]';
   return (
-    <div className={`relative ${box} ${a.iconBg} flex items-center justify-center shadow-lg ${a.glow} overflow-hidden ring-1 ring-white/20`}>
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent" />
-      <Icon size={big ? 30 : 22} className="relative text-white drop-shadow-sm" strokeWidth={2.1} />
+    <div className={`relative ${box} ${a.iconBg} flex items-center justify-center shadow-lg ${a.glow} overflow-hidden`}>
+      {/* brilho diagonal superior */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/5 to-transparent" />
+      {/* reflexo de canto */}
+      <div className="absolute -top-3 -left-2 w-10 h-10 rounded-full bg-white/30 blur-md" />
+      {/* leve escurecimento na base para profundidade */}
+      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/15 to-transparent" />
+      {/* borda interna */}
+      <div className="absolute inset-0 rounded-[inherit] ring-1 ring-inset ring-white/40" />
+      <Icon
+        size={big ? 28 : 22}
+        strokeWidth={2.2}
+        className="relative text-white"
+        style={{ filter: 'drop-shadow(0 1.5px 1.5px rgba(0,0,0,0.28))' }}
+      />
     </div>
   );
 }
