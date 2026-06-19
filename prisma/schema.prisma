@@ -20,6 +20,8 @@ model User {
   grades             Grade[]
   gradeGoals         GradeGoal[]
   studentAttendance  StudentAttendance[]
+  events             Event[]             @relation("EventAuthor")
+  announcements      Announcement[]      @relation("AnnouncementAuthor")
 
   @@unique([name, grade], name: "nameGrade")
 }
@@ -77,6 +79,44 @@ model GradeGoal {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, subject, bimester])
+}
+
+enum EventType {
+  PROVA
+  TRABALHO
+  EVENTO
+  REUNIAO
+  FERIADO
+  OUTRO
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  date        DateTime  @db.Date
+  type        EventType @default(EVENTO)
+  grade       String? // sala alvo; null = todas as turmas
+  createdById Int
+  createdBy   User      @relation("EventAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date])
+}
+
+model Announcement {
+  id          Int      @id @default(autoincrement())
+  title       String
+  content     String
+  grade       String? // sala alvo; null = todas as turmas
+  pinned      Boolean  @default(false)
+  createdById Int
+  createdBy   User     @relation("AnnouncementAuthor", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model StudentAttendance {

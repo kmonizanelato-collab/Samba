@@ -171,6 +171,26 @@ export function roomLevel(grade: string): 'FUNDAMENTAL' | 'MEDIO' {
   return FUNDAMENTAL_ROOMS.includes(grade) ? 'FUNDAMENTAL' : 'MEDIO';
 }
 
+export interface EventTypeDef {
+  value: 'PROVA' | 'TRABALHO' | 'EVENTO' | 'REUNIAO' | 'FERIADO' | 'OUTRO';
+  label: string;
+  color: string;
+  emoji: string;
+}
+
+export const EVENT_TYPES: EventTypeDef[] = [
+  { value: 'PROVA', label: 'Prova', color: '#ef4444', emoji: '📝' },
+  { value: 'TRABALHO', label: 'Trabalho', color: '#f59e0b', emoji: '📚' },
+  { value: 'EVENTO', label: 'Evento', color: '#3b82f6', emoji: '🎉' },
+  { value: 'REUNIAO', label: 'Reunião', color: '#8b5cf6', emoji: '👥' },
+  { value: 'FERIADO', label: 'Feriado', color: '#10b981', emoji: '🏖️' },
+  { value: 'OUTRO', label: 'Outro', color: '#6b7280', emoji: '📌' },
+];
+
+export function eventType(value: string): EventTypeDef {
+  return EVENT_TYPES.find((t) => t.value === value) ?? EVENT_TYPES[2];
+}
+
 export function roomLabel(grade: string): string {
   const year = grade.slice(0, -1);
   const section = grade.slice(-1);

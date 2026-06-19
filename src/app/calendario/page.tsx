@@ -1,0 +1,17 @@
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { Navbar } from '@/components/Navbar';
+import { CalendarioClient } from '@/components/calendario/CalendarioClient';
+
+export default async function CalendarioPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect('/');
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      <Navbar />
+      <CalendarioClient session={session} />
+    </div>
+  );
+}

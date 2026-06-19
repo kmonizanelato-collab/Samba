@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { CalendarRange, GraduationCap, Target, ShieldCheck, ArrowRight, LucideIcon } from 'lucide-react';
+import { CalendarRange, GraduationCap, Target, ShieldCheck, CalendarDays, Megaphone, ArrowRight, LucideIcon } from 'lucide-react';
 
 interface Accent {
   iconBg: string;
@@ -54,6 +54,26 @@ const ACCENTS: Record<string, Accent> = {
     previewBg: 'from-orange-50/80 via-white to-white dark:from-orange-900/10 dark:via-slate-800 dark:to-slate-800',
     tag: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
     glow: 'shadow-orange-500/30',
+  },
+  indigo: {
+    iconBg: 'bg-gradient-to-br from-sky-400 via-indigo-500 to-violet-600',
+    text: 'text-indigo-600 dark:text-indigo-400',
+    btn: 'bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700',
+    activeBox: 'border-indigo-200 dark:border-indigo-800/70 bg-indigo-50/60 dark:bg-indigo-900/15',
+    bar: 'bg-indigo-500',
+    previewBg: 'from-indigo-50/80 via-white to-white dark:from-indigo-900/10 dark:via-slate-800 dark:to-slate-800',
+    tag: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+    glow: 'shadow-indigo-500/30',
+  },
+  pink: {
+    iconBg: 'bg-gradient-to-br from-rose-400 via-pink-500 to-fuchsia-600',
+    text: 'text-pink-600 dark:text-pink-400',
+    btn: 'bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700',
+    activeBox: 'border-pink-200 dark:border-pink-800/70 bg-pink-50/60 dark:bg-pink-900/15',
+    bar: 'bg-pink-500',
+    previewBg: 'from-pink-50/80 via-white to-white dark:from-pink-900/10 dark:via-slate-800 dark:to-slate-800',
+    tag: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+    glow: 'shadow-pink-500/30',
   },
 };
 
@@ -121,6 +141,26 @@ const BASE_MODULES: ModuleItem[] = [
     description:
       'Defina metas de nota para cada bimestre e acompanhe, em tempo real, se os objetivos foram alcançados ou superados.',
     accent: 'emerald',
+  },
+  {
+    href: '/calendario',
+    icon: CalendarDays,
+    name: 'Calendário',
+    short: 'Provas e eventos',
+    tag: 'Datas importantes',
+    description:
+      'Veja provas, trabalhos, reuniões e eventos da escola em um calendário claro e organizado. Professores e admins mantêm tudo atualizado.',
+    accent: 'indigo',
+  },
+  {
+    href: '/avisos',
+    icon: Megaphone,
+    name: 'Mural de Avisos',
+    short: 'Recados e comunicados',
+    tag: 'Comunicação',
+    description:
+      'Fique por dentro dos recados e comunicados da escola. Avisos importantes ficam fixados no topo para você não perder nada.',
+    accent: 'pink',
   },
 ];
 
