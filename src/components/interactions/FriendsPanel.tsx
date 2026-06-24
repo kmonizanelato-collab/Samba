@@ -91,9 +91,9 @@ export function FriendsPanel({ open, onClose }: Props) {
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-slate-50">Amizades</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+          <h2 className="text-lg font-extrabold flex items-center gap-2">🐾 Amizades</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/20 text-white/90">
             <X size={18} />
           </button>
         </div>
@@ -105,7 +105,7 @@ export function FriendsPanel({ open, onClose }: Props) {
           <div className="flex gap-2 mt-2 overflow-x-auto pb-1 scrollbar-thin">
             {friends.length === 0 && <span className="text-sm text-gray-400 dark:text-slate-500">Nenhum amigo ainda.</span>}
             {friends.map((f) => (
-              <div key={f.id} className="flex flex-col items-center gap-1 shrink-0 w-16">
+              <div key={f.id} className="flex flex-col items-center gap-1 shrink-0 w-16 hover:scale-105 transition-transform">
                 <AnimalAvatar animal={f.avatar ?? 'monkey'} size={44} animated={false} />
                 <span className="text-[10px] text-gray-600 dark:text-slate-300 truncate w-full text-center">{f.name}</span>
               </div>

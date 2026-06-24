@@ -1,53 +1,186 @@
+/* ===========================================================
+   SAMBA INTERACTIONS — tema "selva ao entardecer", moderno
+   =========================================================== */
+
 .jungle-scene {
-  background: linear-gradient(180deg, #bfe9ff 0%, #8fd9c4 38%, #4f9d69 70%, #2f6b3f 100%);
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 50% -10%, #ffe9b0 0%, rgba(255, 233, 176, 0) 45%),
+    linear-gradient(180deg, #8fd3ff 0%, #a7e3d6 32%, #5fb277 60%, #2f7d4a 82%, #1f5e38 100%);
+}
+.jungle-scene::before {
+  /* brilho do sol */
+  content: '';
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 360px;
+  height: 360px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 244, 200, 0.95) 0%, rgba(255, 236, 160, 0.45) 35%, rgba(255, 236, 160, 0) 70%);
+  animation: sunPulse 7s ease-in-out infinite;
+  pointer-events: none;
 }
 
+@keyframes sunPulse {
+  0%, 100% { opacity: 0.85; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+}
+
+/* Colinas em camadas (parallax sutil) */
+.jungle-hills {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.jungle-hill {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+/* Nuvens */
 @keyframes cloudDrift {
-  from { transform: translateX(-10%); }
-  to { transform: translateX(10%); }
+  from { transform: translateX(-14%); }
+  to { transform: translateX(14%); }
 }
 .jungle-cloud {
-  animation: cloudDrift 18s ease-in-out infinite alternate;
+  animation: cloudDrift 20s ease-in-out infinite alternate;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.06));
 }
 
+/* Vaga-lumes / partículas */
+@keyframes firefly {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+  20% { opacity: 1; }
+  50% { transform: translate(14px, -20px) scale(1.1); opacity: 0.9; }
+  80% { opacity: 0.6; }
+  100% { transform: translate(-10px, -38px) scale(0.7); opacity: 0; }
+}
+.firefly {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #fff7c2 0%, #ffe27a 50%, rgba(255, 226, 122, 0) 70%);
+  box-shadow: 0 0 8px 2px rgba(255, 226, 122, 0.7);
+  animation: firefly 6s ease-in-out infinite;
+}
+
+/* Folhas e árvores */
 @keyframes leafSway {
-  0%, 100% { transform: rotate(-4deg); }
-  50% { transform: rotate(4deg); }
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
 }
 .jungle-leaf {
-  animation: leafSway 4s ease-in-out infinite;
-  transform-origin: top center;
+  animation: leafSway 4.5s ease-in-out infinite;
+  transform-origin: bottom center;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
 }
 
+/* Avatar idle */
 @keyframes idleBob {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-6px) scale(1.02); }
+  50% { transform: translateY(-7px) scale(1.025); }
 }
-.jungle-idle {
-  animation: idleBob 2.4s ease-in-out infinite;
-}
+.jungle-idle { animation: idleBob 2.6s ease-in-out infinite; }
 
 @keyframes idleSway {
   0%, 100% { transform: rotate(-3deg); }
   50% { transform: rotate(3deg); }
 }
-.jungle-sway {
-  animation: idleSway 3.2s ease-in-out infinite;
-  transform-origin: bottom center;
-}
+.jungle-sway { animation: idleSway 3.4s ease-in-out infinite; transform-origin: bottom center; }
 
+/* Sombra do avatar pulsando */
+@keyframes shadowPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.25; }
+  50% { transform: translateX(-50%) scale(0.86); opacity: 0.18; }
+}
+.jungle-shadow { animation: shadowPulse 2.6s ease-in-out infinite; }
+
+/* Fumaça da chaminé */
+@keyframes smokeRise {
+  0% { transform: translateY(0) scale(1); opacity: 0.5; }
+  100% { transform: translateY(-26px) scale(1.5); opacity: 0; }
+}
+.jungle-smoke { animation: smokeRise 2.8s ease-out infinite; }
+
+/* Entradas */
 @keyframes popIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.92); }
+  from { opacity: 0; transform: translateY(14px) scale(0.94); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.jungle-pop {
-  animation: popIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+.jungle-pop { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.j-fade-up { animation: fadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.j-float { animation: floaty 4s ease-in-out infinite; }
+
+/* Brilho pulsante (badges, anéis) */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+  50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+}
+.j-glow { animation: glowPulse 2.2s ease-out infinite; }
+
+/* Shimmer (destaques) */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.j-shimmer {
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: shimmer 2.4s linear infinite;
 }
 
-@keyframes smokeRise {
-  0% { transform: translateY(0) scale(1); opacity: 0.55; }
-  100% { transform: translateY(-22px) scale(1.4); opacity: 0; }
+/* Card de vidro */
+.glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
-.jungle-smoke {
-  animation: smokeRise 2.6s ease-out infinite;
+.dark .glass {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Botão de feature */
+.feature-card {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+.feature-card:hover {
+  transform: translateY(-6px);
+}
+.feature-card:active { transform: translateY(-2px) scale(0.99); }
+
+@keyframes iconWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  75% { transform: rotate(8deg); }
+}
+.feature-card:hover .feature-icon { animation: iconWiggle 0.6s ease-in-out; }
+
+@keyframes pressInfinite {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.j-pulse { animation: pressInfinite 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .jungle-cloud, .firefly, .jungle-leaf, .jungle-idle, .jungle-sway,
+  .jungle-shadow, .jungle-smoke, .j-float, .j-glow, .j-shimmer,
+  .jungle-scene::before, .j-pulse { animation: none !important; }
 }

@@ -25,6 +25,9 @@ model User {
   interactionsProfile    InteractionsProfile?
   sentFriendRequests     FriendRequest[]      @relation("FriendRequestFrom")
   receivedFriendRequests FriendRequest[]      @relation("FriendRequestTo")
+  studyGroupsOwned       StudyGroup[]         @relation("StudyGroupOwner")
+  studyGroupMemberships  StudyGroupMember[]   @relation("StudyGroupMembership")
+  studyGroupMessages     StudyGroupMessage[]  @relation("StudyGroupAuthor")
 
   @@unique([name, grade], name: "nameGrade")
 }
@@ -171,6 +174,42 @@ model FriendRequest {
   respondedAt DateTime?
 
   @@unique([fromUserId, toUserId])
+}
+
+model StudyGroup {
+  id        Int      @id @default(autoincrement())
+  name      String
+  emoji     String   @default("🌿")
+  subject   String?
+  ownerId   Int
+  owner     User     @relation("StudyGroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  members  StudyGroupMember[]
+  messages StudyGroupMessage[]
+}
+
+model StudyGroupMember {
+  id       Int        @id @default(autoincrement())
+  groupId  Int
+  group    StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   Int
+  user     User       @relation("StudyGroupMembership", fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime   @default(now())
+
+  @@unique([groupId, userId])
+}
+
+model StudyGroupMessage {
+  id        Int        @id @default(autoincrement())
+  groupId   Int
+  group     StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User       @relation("StudyGroupAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime   @default(now())
+
+  @@index([groupId, createdAt])
 }
 
 model StudentAttendance {
