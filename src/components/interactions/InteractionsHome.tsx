@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Session } from 'next-auth';
-import { Users, Trophy, Waves, Sparkles, ArrowRight } from 'lucide-react';
+import { Users, Trophy, Waves, ArrowRight } from 'lucide-react';
 import { AnimalAvatar } from './AnimalAvatar';
 import { FriendsPanel } from './FriendsPanel';
 import { JungleBackground, InteractionsTopBar } from './JungleScene';
@@ -69,15 +69,6 @@ const FEATURES = [
     glow: 'shadow-teal-500/30',
     tagBg: 'bg-teal-50 text-teal-700',
   },
-  {
-    href: '/interactions/mentor',
-    icon: Sparkles,
-    title: 'Mentor de Estudos',
-    desc: 'Uma análise do seu boletim com dicas inteligentes de onde focar agora.',
-    grad: 'from-violet-400 to-fuchsia-500',
-    glow: 'shadow-fuchsia-500/30',
-    tagBg: 'bg-fuchsia-50 text-fuchsia-700',
-  },
 ];
 
 export function InteractionsHome({ session, avatar }: Props) {
@@ -118,7 +109,7 @@ export function InteractionsHome({ session, avatar }: Props) {
 
         <ChaletScene avatar={avatar} />
 
-        <div className="max-w-3xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+        <div className="max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
           {FEATURES.map((f, i) => {
             const Icon = f.icon;
             return (
