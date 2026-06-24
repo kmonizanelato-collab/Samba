@@ -30,7 +30,7 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        <DashboardExplorer isAdmin={session.user.role === 'ADMIN'} />
+        <DashboardExplorer role={session.user.role} />
       </main>
     </div>
   );

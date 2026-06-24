@@ -22,6 +22,9 @@ model User {
   studentAttendance  StudentAttendance[]
   events             Event[]             @relation("EventAuthor")
   announcements      Announcement[]      @relation("AnnouncementAuthor")
+  interactionsProfile    InteractionsProfile?
+  sentFriendRequests     FriendRequest[]      @relation("FriendRequestFrom")
+  receivedFriendRequests FriendRequest[]      @relation("FriendRequestTo")
 
   @@unique([name, grade], name: "nameGrade")
 }
@@ -117,6 +120,57 @@ model Announcement {
   updatedAt   DateTime @updatedAt
 
   @@index([createdAt])
+}
+
+enum NewsCategory {
+  ENEM
+  ENEM_TREINEIRO
+  VESTIBULAR
+  VESTIBULINHO
+  GERAL
+}
+
+model StudentNews {
+  id         Int          @id @default(autoincrement())
+  title      String
+  summary    String
+  sourceName String
+  sourceUrl  String
+  category   NewsCategory
+  targetYears Int[]       @default([])
+  region     String       @default("Bauru")
+  opensAt    DateTime?
+  closesAt   DateTime?
+  highlight  Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model InteractionsProfile {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avatar    String
+  createdAt DateTime @default(now())
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model FriendRequest {
+  id          Int                 @id @default(autoincrement())
+  fromUserId  Int
+  fromUser    User                @relation("FriendRequestFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId    Int
+  toUser      User                @relation("FriendRequestTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  status      FriendRequestStatus @default(PENDING)
+  createdAt   DateTime            @default(now())
+  respondedAt DateTime?
+
+  @@unique([fromUserId, toUserId])
 }
 
 model StudentAttendance {

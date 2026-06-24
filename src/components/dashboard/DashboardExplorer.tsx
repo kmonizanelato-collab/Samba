@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { CalendarRange, GraduationCap, Target, ShieldCheck, CalendarDays, Megaphone, ArrowRight, LucideIcon } from 'lucide-react';
+import { CalendarRange, GraduationCap, Target, ShieldCheck, CalendarDays, Megaphone, Newspaper, PawPrint, ArrowRight, LucideIcon } from 'lucide-react';
 
 interface Accent {
   iconBg: string;
@@ -74,6 +74,26 @@ const ACCENTS: Record<string, Accent> = {
     previewBg: 'from-pink-50/80 via-white to-white dark:from-pink-900/10 dark:via-slate-800 dark:to-slate-800',
     tag: 'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
     glow: 'shadow-pink-500/30',
+  },
+  cyan: {
+    iconBg: 'bg-gradient-to-br from-cyan-400 via-teal-500 to-blue-500',
+    text: 'text-cyan-600 dark:text-cyan-400',
+    btn: 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600',
+    activeBox: 'border-cyan-200 dark:border-cyan-800/70 bg-cyan-50/60 dark:bg-cyan-900/15',
+    bar: 'bg-cyan-500',
+    previewBg: 'from-cyan-50/80 via-white to-white dark:from-cyan-900/10 dark:via-slate-800 dark:to-slate-800',
+    tag: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+    glow: 'shadow-cyan-500/30',
+  },
+  forest: {
+    iconBg: 'bg-gradient-to-br from-lime-400 via-emerald-600 to-green-800',
+    text: 'text-emerald-700 dark:text-emerald-400',
+    btn: 'bg-gradient-to-r from-emerald-600 to-green-800 hover:from-emerald-700 hover:to-green-900',
+    activeBox: 'border-emerald-200 dark:border-emerald-800/70 bg-emerald-50/60 dark:bg-emerald-900/15',
+    bar: 'bg-emerald-600',
+    previewBg: 'from-emerald-50/80 via-white to-white dark:from-emerald-900/10 dark:via-slate-800 dark:to-slate-800',
+    tag: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+    glow: 'shadow-emerald-700/30',
   },
 };
 
@@ -164,6 +184,28 @@ const BASE_MODULES: ModuleItem[] = [
   },
 ];
 
+const NEWS_MODULE: ModuleItem = {
+  href: '/noticias',
+  icon: Newspaper,
+  name: 'Notícias',
+  short: 'ENEM, vestibulinhos e vestibular',
+  tag: 'Sua região',
+  description:
+    'Inscrições do ENEM, vestibulinhos como o do CTI e das Etecs, vestibular da Unesp e novidades da região de Bauru, selecionadas de acordo com a sua série.',
+  accent: 'cyan',
+};
+
+const INTERACTIONS_MODULE: ModuleItem = {
+  href: '/interactions',
+  icon: PawPrint,
+  name: 'Samba Interactions',
+  short: 'Sua aventura na selva',
+  tag: 'Mundo virtual',
+  description:
+    'Escolha seu animal, explore sua cabana na selva e adicione amigos da escola. Em breve: competição por boletim e grupos de estudo.',
+  accent: 'forest',
+};
+
 const ADMIN_MODULE: ModuleItem = {
   href: '/admin',
   icon: ShieldCheck,
@@ -175,8 +217,13 @@ const ADMIN_MODULE: ModuleItem = {
   accent: 'orange',
 };
 
-export function DashboardExplorer({ isAdmin }: { isAdmin: boolean }) {
-  const modules = isAdmin ? [...BASE_MODULES, ADMIN_MODULE] : BASE_MODULES;
+export function DashboardExplorer({ role }: { role: string }) {
+  const modules =
+    role === 'STUDENT'
+      ? [...BASE_MODULES, NEWS_MODULE, INTERACTIONS_MODULE]
+      : role === 'ADMIN'
+      ? [...BASE_MODULES, ADMIN_MODULE]
+      : BASE_MODULES;
   const [active, setActive] = useState(0);
   const cur = modules[active];
   const a = ACCENTS[cur.accent];
