@@ -3,21 +3,18 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
-import { PROFILE_AVATAR_SELECT, profileOutfit, RawProfile } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
-function selectUser() {
-  return { id: true, name: true, grade: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } as const;
-}
+const userSelect = { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } as const;
 
-function serializeUser(u: { id: number; name: string; grade: string | null; interactionsProfile: RawProfile | null }) {
+function serialize(u: { id: number; name: string; grade: string | null; interactionsProfile: { avatar: string } | null }) {
   return {
     id: u.id,
     name: u.name,
     grade: u.grade,
     gradeLabel: u.grade ? roomLabel(u.grade) : null,
-    ...profileOutfit(u.interactionsProfile),
+    avatar: u.interactionsProfile?.avatar ?? null,
   };
 }
 
@@ -28,21 +25,13 @@ export async function GET() {
 
   const userId = parseInt(session.user.id);
   const [received, sent] = await Promise.all([
-    prisma.friendRequest.findMany({
-      where: { toUserId: userId, status: 'PENDING' },
-      include: { fromUser: { select: selectUser() } },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.friendRequest.findMany({
-      where: { fromUserId: userId, status: 'PENDING' },
-      include: { toUser: { select: selectUser() } },
-      orderBy: { createdAt: 'desc' },
-    }),
+    prisma.friendRequest.findMany({ where: { toUserId: userId, status: 'PENDING' }, include: { fromUser: { select: userSelect } }, orderBy: { createdAt: 'desc' } }),
+    prisma.friendRequest.findMany({ where: { fromUserId: userId, status: 'PENDING' }, include: { toUser: { select: userSelect } }, orderBy: { createdAt: 'desc' } }),
   ]);
 
   return NextResponse.json({
-    received: received.map((r) => ({ id: r.id, createdAt: r.createdAt, user: serializeUser(r.fromUser) })),
-    sent: sent.map((r) => ({ id: r.id, createdAt: r.createdAt, user: serializeUser(r.toUser) })),
+    received: received.map((r) => ({ id: r.id, createdAt: r.createdAt, user: serialize(r.fromUser) })),
+    sent: sent.map((r) => ({ id: r.id, createdAt: r.createdAt, user: serialize(r.toUser) })),
   });
 }
 
@@ -51,29 +40,26 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (session.user.role !== 'STUDENT') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const body = await req.json();
-  const name = (body.name ?? '').trim();
-  const grade = (body.grade ?? '').trim();
-  if (!name || !grade) return NextResponse.json({ error: 'Informe nome e sala.' }, { status: 400 });
-
   const userId = parseInt(session.user.id);
-  const target = await prisma.user.findFirst({
-    where: { name: { equals: name, mode: 'insensitive' }, grade, role: 'STUDENT' },
-  });
-  if (!target) return NextResponse.json({ error: 'Nenhum aluno encontrado com esse nome e sala.' }, { status: 404 });
-  if (target.id === userId) return NextResponse.json({ error: 'Você não pode adicionar a si mesmo.' }, { status: 400 });
+  const myGrade = session.user.grade ?? null;
+  const body = await req.json();
+  const toUserId = parseInt(body.toUserId);
+  if (!toUserId) return NextResponse.json({ error: 'Aluno inválido.' }, { status: 400 });
+  if (toUserId === userId) return NextResponse.json({ error: 'Você não pode adicionar a si mesmo.' }, { status: 400 });
+
+  const target = await prisma.user.findFirst({ where: { id: toUserId, role: 'STUDENT' } });
+  if (!target) return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 });
+  // Apenas colegas da MESMA SALA
+  if (!myGrade || target.grade !== myGrade) {
+    return NextResponse.json({ error: 'Você só pode adicionar colegas da sua sala.' }, { status: 403 });
+  }
 
   const existing = await prisma.friendRequest.findFirst({
-    where: {
-      OR: [
-        { fromUserId: userId, toUserId: target.id },
-        { fromUserId: target.id, toUserId: userId },
-      ],
-    },
+    where: { OR: [{ fromUserId: userId, toUserId: target.id }, { fromUserId: target.id, toUserId: userId }] },
   });
   if (existing) {
     if (existing.status === 'ACCEPTED') return NextResponse.json({ error: 'Vocês já são amigos.' }, { status: 409 });
-    if (existing.status === 'PENDING') return NextResponse.json({ error: 'Já existe um pedido pendente entre vocês.' }, { status: 409 });
+    if (existing.status === 'PENDING') return NextResponse.json({ error: 'Já existe um pedido pendente.' }, { status: 409 });
     await prisma.friendRequest.update({ where: { id: existing.id }, data: { status: 'PENDING', fromUserId: userId, toUserId: target.id, respondedAt: null } });
     return NextResponse.json({ ok: true });
   }
