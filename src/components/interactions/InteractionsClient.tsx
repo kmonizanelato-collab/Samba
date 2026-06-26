@@ -1,33 +1,28 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { Session } from 'next-auth';
-import { Trophy, Users, Sparkles, Crown, Check, X, UserPlus, Clock, Inbox, PawPrint } from 'lucide-react';
-import { JUNGLE_ANIMALS } from '@/lib/interactions';
+import { Trophy, Users, Sparkles, Check, X, UserPlus, Clock, Inbox, Wand2 } from 'lucide-react';
+import { AvatarLook, DEFAULT_LOOK } from '@/lib/interactions';
 import { AnimalAvatar } from './AnimalAvatar';
+import { AvatarCustomizer } from './AvatarCustomizer';
 
 interface Props {
   session: Session;
 }
 
-interface RankRow {
-  id: number;
-  name: string;
-  gradeLabel: string | null;
-  avatar: string | null;
-  average: number | null;
-  points: number;
-  position: number;
-  isMe: boolean;
-  isFriend: boolean;
-  sameClass: boolean;
+interface Look { avatar: string | null; hat?: string; accessory?: string; bg?: string; }
+interface RankRow extends Look {
+  id: number; name: string; gradeLabel: string | null;
+  average: number | null; points: number; position: number;
+  isMe: boolean; isFriend: boolean;
 }
-interface Classmate { id: number; name: string; avatar: string | null; status: 'friend' | 'sent' | 'received' | 'none'; }
-interface PendingReq { id: number; user: { id: number; name: string; avatar: string | null; gradeLabel: string | null }; }
+interface Classmate extends Look { id: number; name: string; status: 'friend' | 'sent' | 'received' | 'none'; }
+interface PendingReq { id: number; user: Look & { id: number; name: string; gradeLabel: string | null }; }
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 
 export function InteractionsClient({ session }: Props) {
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [look, setLook] = useState<AvatarLook | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [tab, setTab] = useState<'ranking' | 'amigos'>('ranking');
 
@@ -36,15 +31,14 @@ export function InteractionsClient({ session }: Props) {
   const [classmates, setClassmates] = useState<Classmate[]>([]);
   const [received, setReceived] = useState<PendingReq[]>([]);
 
-  // avatar picker
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [chosen, setChosen] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [draft, setDraft] = useState<AvatarLook>({ ...DEFAULT_LOOK });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetch('/api/interactions/profile')
       .then((r) => r.json())
-      .then((d) => setAvatar(d.avatar ?? null))
+      .then((d) => setLook(d.look ?? null))
       .finally(() => setLoadingProfile(false));
   }, []);
 
@@ -60,68 +54,46 @@ export function InteractionsClient({ session }: Props) {
     setReceived(fr.received ?? []);
   }, []);
 
-  useEffect(() => {
-    if (avatar) loadHub();
-  }, [avatar, loadHub]);
+  useEffect(() => { if (look) loadHub(); }, [look, loadHub]);
 
-  async function saveAvatar(animal: string) {
+  async function saveLook(l: AvatarLook) {
     setSaving(true);
     const res = await fetch('/api/interactions/profile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avatar: animal }),
+      body: JSON.stringify(l),
     });
     setSaving(false);
     if (res.ok) {
-      setAvatar(animal);
-      setPickerOpen(false);
-      setChosen(null);
+      const d = await res.json();
+      setLook(d.look);
+      setEditorOpen(false);
     }
   }
 
   async function addFriend(id: number) {
     const res = await fetch('/api/interactions/friend-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ toUserId: id }),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ toUserId: id }),
     });
     if (res.ok) loadHub();
   }
   async function respond(reqId: number, action: 'accept' | 'decline') {
     await fetch(`/api/interactions/friend-requests/${reqId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action }),
     });
     loadHub();
   }
 
-  // ---- Onboarding: escolher animal (primeira vez) ----
-  if (!loadingProfile && !avatar) {
+  // ---- Onboarding (sem perfil ainda) ----
+  if (!loadingProfile && !look) {
     return (
-      <main className="max-w-2xl mx-auto px-4 py-10">
+      <main className="max-w-md mx-auto px-4 py-8">
         <Header />
-        <div className="card p-6 sm:p-8 mt-6 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/25">
-            <PawPrint size={26} className="text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-slate-50 mt-4">Escolha o seu animal</h2>
-          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Ele será o seu personagem na competição da turma.</p>
-
-          <div className="grid grid-cols-4 gap-3 sm:gap-4 mt-6">
-            {JUNGLE_ANIMALS.map((a) => (
-              <div key={a.key} className="flex flex-col items-center gap-1.5">
-                <AnimalAvatar animal={a.key} size={64} selected={chosen === a.key} onClick={() => setChosen(a.key)} />
-                <span className={`text-[11px] font-semibold ${chosen === a.key ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-slate-300'}`}>{a.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <button
-            onClick={() => chosen && saveAvatar(chosen)}
-            disabled={!chosen || saving}
-            className="btn-primary w-full mt-7 disabled:opacity-50"
-          >
+        <div className="card p-6 mt-6">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-slate-50 text-center">Monte o seu personagem</h2>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1 mb-5 text-center">Escolha o animal e personalize com chapéu, óculos e cor.</p>
+          <AvatarCustomizer look={draft} onChange={setDraft} />
+          <button onClick={() => saveLook(draft)} disabled={saving} className="btn-primary w-full mt-5 disabled:opacity-50">
             {saving ? 'Salvando...' : 'Entrar na competição'}
           </button>
         </div>
@@ -129,24 +101,24 @@ export function InteractionsClient({ session }: Props) {
     );
   }
 
-  const pendingClassmates = classmates;
-
   return (
     <main className="max-w-3xl mx-auto px-4 py-8">
       <Header />
 
       {/* Cartão "você" */}
       <div className="card p-5 mt-6 flex items-center gap-4">
-        {avatar && <AnimalAvatar animal={avatar} size={64} />}
+        {look && <AnimalAvatar animal={look.animal} hat={look.hat} accessory={look.accessory} bg={look.bg} size={66} />}
         <div className="min-w-0 flex-1">
           <div className="font-bold text-lg text-gray-900 dark:text-slate-50 truncate">{session.user.name}</div>
           <div className="text-sm text-gray-500 dark:text-slate-400">{session.user.grade} · Ensino {session.user.level === 'FUNDAMENTAL' ? 'Fundamental' : 'Médio'}</div>
         </div>
         <div className="text-right">
           <div className="text-2xl font-extrabold text-amber-500 flex items-center gap-1 justify-end"><Sparkles size={18} /> {me?.points ?? 0}</div>
-          <div className="text-[11px] text-gray-400 dark:text-slate-500">pontos{me ? ` · ${me.position}º lugar` : ''}</div>
+          <div className="text-[11px] text-gray-400 dark:text-slate-500">pontos{me ? ` · ${me.position}º` : ''}</div>
         </div>
-        <button onClick={() => { setChosen(avatar); setPickerOpen(true); }} className="btn-secondary text-xs py-2 px-3 shrink-0">Trocar</button>
+        <button onClick={() => { if (look) setDraft(look); setEditorOpen(true); }} className="btn-secondary text-xs py-2 px-3 shrink-0 flex items-center gap-1">
+          <Wand2 size={14} /> Personalizar
+        </button>
       </div>
 
       {/* Tabs */}
@@ -168,27 +140,23 @@ export function InteractionsClient({ session }: Props) {
             <span className="text-[11px] text-gray-400 dark:text-slate-500">pontos = soma das notas</span>
           </div>
           {ranking.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-400 dark:text-slate-500">
-              Ainda não há pontuação. Quando houver notas no boletim, o ranking aparece aqui.
-            </div>
+            <div className="p-8 text-center text-sm text-gray-400 dark:text-slate-500">Ainda não há pontuação. Quando houver notas no boletim, o ranking aparece aqui.</div>
           ) : (
-            <div>
-              {ranking.map((p, i) => (
-                <div key={p.id} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-800/50 last:border-0 ${p.isMe ? 'bg-blue-50/60 dark:bg-blue-900/15' : ''}`}>
-                  <span className="w-7 text-center font-extrabold text-gray-400 dark:text-slate-500">{i < 3 ? MEDALS[i] : `${p.position}º`}</span>
-                  <AnimalAvatar animal={p.avatar ?? 'monkey'} size={38} />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate flex items-center gap-1.5">
-                      {p.name}
-                      {p.isMe && <span className="badge bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-[10px]">você</span>}
-                      {!p.isMe && p.isFriend && <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px]">amigo</span>}
-                    </div>
-                    <div className="text-[11px] text-gray-400 dark:text-slate-500">{p.gradeLabel ?? '—'}{p.average !== null ? ` · média ${p.average.toFixed(1)}` : ''}</div>
+            ranking.map((p, i) => (
+              <div key={p.id} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-800/50 last:border-0 ${p.isMe ? 'bg-blue-50/60 dark:bg-blue-900/15' : ''}`}>
+                <span className="w-7 text-center font-extrabold text-gray-400 dark:text-slate-500">{i < 3 ? MEDALS[i] : `${p.position}º`}</span>
+                <AnimalAvatar animal={p.avatar ?? 'monkey'} hat={p.hat} accessory={p.accessory} bg={p.bg} size={40} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate flex items-center gap-1.5">
+                    {p.name}
+                    {p.isMe && <span className="badge bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 text-[10px]">você</span>}
+                    {!p.isMe && p.isFriend && <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-[10px]">amigo</span>}
                   </div>
-                  <span className="flex items-center gap-1 text-sm font-extrabold text-amber-500"><Sparkles size={13} /> {p.points}</span>
+                  <div className="text-[11px] text-gray-400 dark:text-slate-500">{p.gradeLabel ?? '—'}{p.average !== null ? ` · média ${p.average.toFixed(1)}` : ''}</div>
                 </div>
-              ))}
-            </div>
+                <span className="flex items-center gap-1 text-sm font-extrabold text-amber-500"><Sparkles size={13} /> {p.points}</span>
+              </div>
+            ))
           )}
         </div>
       )}
@@ -198,12 +166,10 @@ export function InteractionsClient({ session }: Props) {
         <div className="mt-4 space-y-4">
           {received.length > 0 && (
             <div className="card overflow-hidden">
-              <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-200">
-                <Inbox size={15} /> Pedidos recebidos
-              </div>
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-slate-200"><Inbox size={15} /> Pedidos recebidos</div>
               {received.map((r) => (
                 <div key={r.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-800/50 last:border-0">
-                  <AnimalAvatar animal={r.user.avatar ?? 'monkey'} size={38} />
+                  <AnimalAvatar animal={r.user.avatar ?? 'monkey'} hat={r.user.hat} accessory={r.user.accessory} bg={r.user.bg} size={40} />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-bold text-gray-800 dark:text-slate-100 truncate">{r.user.name}</div>
                     <div className="text-[11px] text-gray-400 dark:text-slate-500">{r.user.gradeLabel}</div>
@@ -216,23 +182,19 @@ export function InteractionsClient({ session }: Props) {
           )}
 
           <div className="card overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-sm font-semibold text-gray-700 dark:text-slate-200">
-              Colegas da sua sala ({session.user.grade})
-            </div>
-            {pendingClassmates.length === 0 ? (
+            <div className="px-4 py-3 border-b border-gray-100 dark:border-slate-700 text-sm font-semibold text-gray-700 dark:text-slate-200">Colegas da sua sala ({session.user.grade})</div>
+            {classmates.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-400 dark:text-slate-500">Nenhum outro aluno cadastrado na sua sala ainda.</div>
             ) : (
-              pendingClassmates.map((c) => (
+              classmates.map((c) => (
                 <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 dark:border-slate-800/50 last:border-0">
-                  <AnimalAvatar animal={c.avatar ?? 'monkey'} size={38} />
+                  <AnimalAvatar animal={c.avatar ?? 'monkey'} hat={c.hat} accessory={c.accessory} bg={c.bg} size={40} />
                   <div className="min-w-0 flex-1 text-sm font-bold text-gray-800 dark:text-slate-100 truncate">{c.name}</div>
                   {c.status === 'friend' && <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><Check size={11} /> Amigo</span>}
                   {c.status === 'sent' && <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><Clock size={11} /> Enviado</span>}
                   {c.status === 'received' && <span className="badge bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300"><Inbox size={11} /> Te chamou</span>}
                   {c.status === 'none' && (
-                    <button onClick={() => addFriend(c.id)} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1.5 rounded-lg">
-                      <UserPlus size={14} /> Adicionar
-                    </button>
+                    <button onClick={() => addFriend(c.id)} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-2.5 py-1.5 rounded-lg"><UserPlus size={14} /> Adicionar</button>
                   )}
                 </div>
               ))
@@ -241,25 +203,18 @@ export function InteractionsClient({ session }: Props) {
         </div>
       )}
 
-      {/* Modal trocar avatar */}
-      {pickerOpen && (
+      {/* Modal personalizar */}
+      {editorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60 backdrop-blur-sm">
-          <div className="card w-full max-w-md p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-50">Trocar animal</h3>
-              <button onClick={() => setPickerOpen(false)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500"><X size={18} /></button>
+          <div className="card w-full max-w-md p-6 shadow-2xl max-h-[92vh] overflow-y-auto scrollbar-thin">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-50 flex items-center gap-2"><Wand2 size={18} className="text-blue-500" /> Personalizar</h3>
+              <button onClick={() => setEditorOpen(false)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-500"><X size={18} /></button>
             </div>
-            <div className="grid grid-cols-4 gap-3">
-              {JUNGLE_ANIMALS.map((a) => (
-                <div key={a.key} className="flex flex-col items-center gap-1.5">
-                  <AnimalAvatar animal={a.key} size={60} selected={chosen === a.key} onClick={() => setChosen(a.key)} />
-                  <span className={`text-[11px] font-semibold ${chosen === a.key ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-slate-300'}`}>{a.label}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-6">
-              <button onClick={() => setPickerOpen(false)} className="flex-1 btn-secondary">Cancelar</button>
-              <button onClick={() => chosen && saveAvatar(chosen)} disabled={!chosen || saving} className="flex-1 btn-primary disabled:opacity-50">{saving ? 'Salvando...' : 'Salvar'}</button>
+            <AvatarCustomizer look={draft} onChange={setDraft} />
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setEditorOpen(false)} className="flex-1 btn-secondary">Cancelar</button>
+              <button onClick={() => saveLook(draft)} disabled={saving} className="flex-1 btn-primary disabled:opacity-50">{saving ? 'Salvando...' : 'Salvar'}</button>
             </div>
           </div>
         </div>
@@ -276,7 +231,7 @@ function Header() {
       </div>
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-50 leading-tight">Samba Interactions</h1>
-        <p className="text-xs text-gray-400 dark:text-slate-500">Compita com a sua turma pelas notas do boletim</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500">Personalize seu personagem e compita com a turma</p>
       </div>
     </div>
   );

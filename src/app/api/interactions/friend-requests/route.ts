@@ -3,18 +3,23 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { AVATAR_SELECT, lookOf, RawProfile } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
-const userSelect = { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } as const;
+const userSelect = { id: true, name: true, grade: true, interactionsProfile: { select: AVATAR_SELECT } } as const;
 
-function serialize(u: { id: number; name: string; grade: string | null; interactionsProfile: { avatar: string } | null }) {
+function serialize(u: { id: number; name: string; grade: string | null; interactionsProfile: RawProfile | null }) {
+  const look = lookOf(u.interactionsProfile);
   return {
     id: u.id,
     name: u.name,
     grade: u.grade,
     gradeLabel: u.grade ? roomLabel(u.grade) : null,
-    avatar: u.interactionsProfile?.avatar ?? null,
+    avatar: u.interactionsProfile ? look.animal : null,
+    hat: look.hat,
+    accessory: look.accessory,
+    bg: look.bg,
   };
 }
 

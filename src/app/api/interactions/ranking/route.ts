@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { AVATAR_SELECT, lookOf } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ export async function GET() {
       id: true,
       name: true,
       grade: true,
-      interactionsProfile: { select: { avatar: true } },
+      interactionsProfile: { select: AVATAR_SELECT },
       grades: { select: { nota: true } },
     },
   });
@@ -45,12 +46,16 @@ export async function GET() {
       const total = notas.reduce((s, n) => s + n, 0);
       const average = notas.length ? total / notas.length : null;
       const points = Math.round(total * 10);
+      const look = lookOf(p.interactionsProfile);
       return {
         id: p.id,
         name: p.name,
         grade: p.grade,
         gradeLabel: p.grade ? roomLabel(p.grade) : null,
-        avatar: p.interactionsProfile?.avatar ?? null,
+        avatar: p.interactionsProfile ? look.animal : null,
+        hat: look.hat,
+        accessory: look.accessory,
+        bg: look.bg,
         average,
         points,
         isMe: p.id === userId,

@@ -1,127 +1,122 @@
 export interface AnimalDef {
   key: string;
   label: string;
-  habitat: string;
 }
 
-export const JUNGLE_ANIMALS: AnimalDef[] = [
-  { key: 'lion', label: 'Leão', habitat: 'Rei da clareira' },
-  { key: 'tiger', label: 'Tigre', habitat: 'Caçador silencioso' },
-  { key: 'monkey', label: 'Macaco', habitat: 'Mestre das árvores' },
-  { key: 'elephant', label: 'Elefante', habitat: 'Guardião da trilha' },
-  { key: 'giraffe', label: 'Girafa', habitat: 'Vigia do horizonte' },
-  { key: 'zebra', label: 'Zebra', habitat: 'Veloz da savana' },
-  { key: 'panda', label: 'Panda', habitat: 'Sábio do bambuzal' },
-  { key: 'parrot', label: 'Papagaio', habitat: 'Mensageiro da copa' },
+export const ANIMALS: AnimalDef[] = [
+  { key: 'lion', label: 'Leão' },
+  { key: 'tiger', label: 'Tigre' },
+  { key: 'fox', label: 'Raposa' },
+  { key: 'dog', label: 'Cachorro' },
+  { key: 'cat', label: 'Gato' },
+  { key: 'rabbit', label: 'Coelho' },
+  { key: 'bear', label: 'Urso' },
+  { key: 'panda', label: 'Panda' },
+  { key: 'koala', label: 'Coala' },
+  { key: 'monkey', label: 'Macaco' },
+  { key: 'pig', label: 'Porco' },
+  { key: 'cow', label: 'Vaca' },
+  { key: 'horse', label: 'Cavalo' },
+  { key: 'zebra', label: 'Zebra' },
+  { key: 'giraffe', label: 'Girafa' },
+  { key: 'elephant', label: 'Elefante' },
+  { key: 'frog', label: 'Sapo' },
+  { key: 'hamster', label: 'Hamster' },
+  { key: 'chick', label: 'Pintinho' },
+  { key: 'owl', label: 'Coruja' },
+  { key: 'penguin', label: 'Pinguim' },
+  { key: 'parrot', label: 'Papagaio' },
+  { key: 'unicorn', label: 'Unicórnio' },
 ];
 
-export const JUNGLE_ANIMAL_KEYS = JUNGLE_ANIMALS.map((a) => a.key);
-
+// Compat: alguns lugares antigos usavam JUNGLE_ANIMALS
+export const JUNGLE_ANIMALS = ANIMALS;
+export const ANIMAL_KEYS = ANIMALS.map((a) => a.key);
 export function isValidAnimal(key: string): boolean {
-  return JUNGLE_ANIMAL_KEYS.includes(key);
+  return ANIMAL_KEYS.includes(key);
 }
 
-/* ===========================================================
-   Customização do avatar (boneco vestível)
-   =========================================================== */
-
-export interface OutfitOption {
+export interface Cosmetic {
   key: string;
   label: string;
-  /** cor de amostra para o seletor (quando faz sentido) */
-  swatch?: string;
 }
 
-export interface Outfit {
+export const HATS: Cosmetic[] = [
+  { key: 'none', label: 'Nenhum' },
+  { key: 'cap', label: 'Boné' },
+  { key: 'tophat', label: 'Cartola' },
+  { key: 'crown', label: 'Coroa' },
+  { key: 'grad', label: 'Formatura' },
+  { key: 'sunhat', label: 'Chapéu' },
+  { key: 'helmet', label: 'Capacete' },
+  { key: 'military', label: 'Militar' },
+  { key: 'bow', label: 'Laço' },
+];
+
+export const GLASSES: Cosmetic[] = [
+  { key: 'none', label: 'Nenhum' },
+  { key: 'glasses', label: 'Óculos' },
+  { key: 'sunglasses', label: 'Óculos de sol' },
+  { key: 'goggles', label: 'Óculos de proteção' },
+];
+
+export interface BgOption {
+  key: string;
+  label: string;
+  color: string;
+}
+
+export const BGS: BgOption[] = [
+  { key: 'sky', label: 'Céu', color: '#7DD3FC' },
+  { key: 'mint', label: 'Menta', color: '#5EEAD4' },
+  { key: 'blue', label: 'Azul', color: '#93C5FD' },
+  { key: 'violet', label: 'Lilás', color: '#C4B5FD' },
+  { key: 'pink', label: 'Rosa', color: '#F9A8D4' },
+  { key: 'rose', label: 'Coral', color: '#FDA4AF' },
+  { key: 'peach', label: 'Pêssego', color: '#FDBA74' },
+  { key: 'sun', label: 'Sol', color: '#FDE047' },
+  { key: 'lime', label: 'Limão', color: '#BEF264' },
+  { key: 'slate', label: 'Cinza', color: '#CBD5E1' },
+];
+
+const HAT_KEYS = new Set(HATS.map((h) => h.key));
+const GLASSES_KEYS = new Set(GLASSES.map((g) => g.key));
+const BG_KEYS = new Set(BGS.map((b) => b.key));
+
+export interface AvatarLook {
+  animal: string;
   hat: string;
-  top: string;
   accessory: string;
   bg: string;
 }
 
-export const DEFAULT_OUTFIT: Outfit = { hat: 'none', top: 'none', accessory: 'none', bg: 'mint' };
+export const DEFAULT_LOOK: AvatarLook = { animal: 'lion', hat: 'none', accessory: 'none', bg: 'sky' };
 
-export const HATS: OutfitOption[] = [
-  { key: 'none', label: 'Sem chapéu' },
-  { key: 'cap', label: 'Boné' },
-  { key: 'beanie', label: 'Gorro' },
-  { key: 'party', label: 'Festa' },
-  { key: 'graduation', label: 'Formatura' },
-  { key: 'crown', label: 'Coroa' },
-  { key: 'flower', label: 'Florzinha' },
-  { key: 'headphones', label: 'Fones' },
-  { key: 'wizard', label: 'Mago' },
-  { key: 'bow', label: 'Lacinho' },
-];
-
-export const TOPS: OutfitOption[] = [
-  { key: 'none', label: 'Sem roupa' },
-  { key: 'tshirt', label: 'Camiseta' },
-  { key: 'hoodie', label: 'Moletom' },
-  { key: 'striped', label: 'Listrada' },
-  { key: 'jersey', label: 'Camisa de time' },
-  { key: 'dress', label: 'Vestido' },
-  { key: 'jacket', label: 'Jaqueta' },
-  { key: 'sweater', label: 'Suéter' },
-];
-
-export const ACCESSORIES: OutfitOption[] = [
-  { key: 'none', label: 'Nenhum' },
-  { key: 'glasses', label: 'Óculos' },
-  { key: 'sunglasses', label: 'Óculos de sol' },
-  { key: 'bowtie', label: 'Gravata-borboleta' },
-  { key: 'scarf', label: 'Cachecol' },
-  { key: 'earbuds', label: 'Fone sem fio' },
-  { key: 'necklace', label: 'Colar' },
-];
-
-export const BG_OPTIONS: OutfitOption[] = [
-  { key: 'mint', label: 'Menta', swatch: '#6EE7B7' },
-  { key: 'sky', label: 'Céu', swatch: '#7DD3FC' },
-  { key: 'peach', label: 'Pêssego', swatch: '#FDBA74' },
-  { key: 'rose', label: 'Rosa', swatch: '#FDA4AF' },
-  { key: 'violet', label: 'Lilás', swatch: '#C4B5FD' },
-  { key: 'sun', label: 'Sol', swatch: '#FCD34D' },
-  { key: 'slate', label: 'Grafite', swatch: '#94A3B8' },
-  { key: 'forest', label: 'Floresta', swatch: '#34D399' },
-];
-
-const HAT_KEYS = new Set(HATS.map((o) => o.key));
-const TOP_KEYS = new Set(TOPS.map((o) => o.key));
-const ACC_KEYS = new Set(ACCESSORIES.map((o) => o.key));
-const BG_KEYS = new Set(BG_OPTIONS.map((o) => o.key));
-
-/** Garante um outfit válido a partir de dados crus (DB/entrada). */
-export function normalizeOutfit(raw: Partial<Outfit> | null | undefined): Outfit {
+export function normalizeLook(raw: Partial<AvatarLook> | null | undefined): AvatarLook {
   return {
+    animal: raw?.animal && isValidAnimal(raw.animal) ? raw.animal : 'lion',
     hat: raw?.hat && HAT_KEYS.has(raw.hat) ? raw.hat : 'none',
-    top: raw?.top && TOP_KEYS.has(raw.top) ? raw.top : 'none',
-    accessory: raw?.accessory && ACC_KEYS.has(raw.accessory) ? raw.accessory : 'none',
-    bg: raw?.bg && BG_KEYS.has(raw.bg) ? raw.bg : 'mint',
+    accessory: raw?.accessory && GLASSES_KEYS.has(raw.accessory) ? raw.accessory : 'none',
+    bg: raw?.bg && BG_KEYS.has(raw.bg) ? raw.bg : 'sky',
   };
 }
 
-/** select do Prisma para puxar avatar + roupas do perfil. */
-export const PROFILE_AVATAR_SELECT = {
-  avatar: true,
-  hat: true,
-  top: true,
-  accessory: true,
-  bg: true,
-} as const;
+export function bgColor(key: string | null | undefined): string {
+  return BGS.find((b) => b.key === key)?.color ?? '#7DD3FC';
+}
+
+/** select do Prisma para puxar o visual do perfil. */
+export const AVATAR_SELECT = { avatar: true, hat: true, accessory: true, bg: true } as const;
 
 export interface RawProfile {
   avatar: string;
   hat: string;
-  top: string;
   accessory: string;
   bg: string;
 }
 
-/** extrai { avatar, outfit } de um perfil do banco (ou nulo). */
-export function profileOutfit(p: RawProfile | null | undefined): { avatar: string | null; outfit: Outfit | null } {
-  return {
-    avatar: p?.avatar ?? null,
-    outfit: p ? { hat: p.hat, top: p.top, accessory: p.accessory, bg: p.bg } : null,
-  };
+/** Extrai o visual de um perfil do banco (ou um padrão). */
+export function lookOf(p: RawProfile | null | undefined): AvatarLook {
+  if (!p) return { ...DEFAULT_LOOK };
+  return { animal: p.avatar, hat: p.hat, accessory: p.accessory, bg: p.bg };
 }

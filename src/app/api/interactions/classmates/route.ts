@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { AVATAR_SELECT, lookOf } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export async function GET() {
   const [classmates, requests] = await Promise.all([
     prisma.user.findMany({
       where: { role: 'STUDENT', grade: myGrade, id: { not: userId } },
-      select: { id: true, name: true, interactionsProfile: { select: { avatar: true } } },
+      select: { id: true, name: true, interactionsProfile: { select: AVATAR_SELECT } },
       orderBy: { name: 'asc' },
     }),
     prisma.friendRequest.findMany({
@@ -36,11 +37,17 @@ export async function GET() {
   }
 
   return NextResponse.json(
-    classmates.map((c) => ({
-      id: c.id,
-      name: c.name,
-      avatar: c.interactionsProfile?.avatar ?? null,
-      status: statusFor(c.id),
-    }))
+    classmates.map((c) => {
+      const look = lookOf(c.interactionsProfile);
+      return {
+        id: c.id,
+        name: c.name,
+        avatar: c.interactionsProfile ? look.animal : null,
+        hat: look.hat,
+        accessory: look.accessory,
+        bg: look.bg,
+        status: statusFor(c.id),
+      };
+    })
   );
 }

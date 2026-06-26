@@ -3,10 +3,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { AVATAR_SELECT, lookOf } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
-const userSelect = { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } as const;
+const userSelect = { id: true, name: true, grade: true, interactionsProfile: { select: AVATAR_SELECT } } as const;
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -21,12 +22,16 @@ export async function GET() {
 
   const friends = accepted.map((req) => {
     const f = req.fromUserId === userId ? req.toUser : req.fromUser;
+    const look = lookOf(f.interactionsProfile);
     return {
       id: f.id,
       name: f.name,
       grade: f.grade,
       gradeLabel: f.grade ? roomLabel(f.grade) : null,
-      avatar: f.interactionsProfile?.avatar ?? null,
+      avatar: f.interactionsProfile ? look.animal : null,
+      hat: look.hat,
+      accessory: look.accessory,
+      bg: look.bg,
     };
   });
 
