@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarRange, GraduationCap, Target, ShieldCheck, CalendarDays, Megaphone, Newspaper, PawPrint, ArrowRight, LucideIcon } from 'lucide-react';
 
@@ -98,7 +98,7 @@ const ACCENTS: Record<string, Accent> = {
 };
 
 /** Ícone estilo "app": gradiente vívido, brilho/reflexo, borda interna e sombra colorida */
-function AppIcon({ icon: Icon, accent, big = false }: { icon: LucideIcon; accent: keyof typeof ACCENTS; big?: boolean }) {
+function AppIcon({ icon: Icon, accent, big = false, badge = false }: { icon: LucideIcon; accent: keyof typeof ACCENTS; big?: boolean; badge?: boolean }) {
   const a = ACCENTS[accent];
   const box = big ? 'w-[60px] h-[60px] rounded-[19px]' : 'w-12 h-12 rounded-[15px]';
   return (
@@ -117,6 +117,9 @@ function AppIcon({ icon: Icon, accent, big = false }: { icon: LucideIcon; accent
         className="relative text-white"
         style={{ filter: 'drop-shadow(0 1.5px 1.5px rgba(0,0,0,0.28))' }}
       />
+      {badge && (
+        <span className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900 j-glow-dot" />
+      )}
     </div>
   );
 }
@@ -217,6 +220,35 @@ const ADMIN_MODULE: ModuleItem = {
   accent: 'orange',
 };
 
+function useHasPinnedAviso() {
+  const [has, setHas] = useState(false);
+  useEffect(() => {
+    fetch('/api/announcements')
+      .then((r) => r.json())
+      .then((data: { pinned: boolean }[]) => setHas((data ?? []).some((a) => a.pinned)))
+      .catch(() => {});
+  }, []);
+  return has;
+}
+
+function useHasUpcomingEvent() {
+  const [has, setHas] = useState(false);
+  useEffect(() => {
+    fetch('/api/events')
+      .then((r) => r.json())
+      .then((data: { date: string }[]) => {
+        const now = Date.now();
+        const in3Days = now + 3 * 24 * 60 * 60 * 1000;
+        setHas((data ?? []).some((e) => {
+          const t = new Date(e.date).getTime();
+          return t >= now && t <= in3Days;
+        }));
+      })
+      .catch(() => {});
+  }, []);
+  return has;
+}
+
 export function DashboardExplorer({ role }: { role: string }) {
   const modules =
     role === 'STUDENT'
@@ -227,6 +259,15 @@ export function DashboardExplorer({ role }: { role: string }) {
   const [active, setActive] = useState(0);
   const cur = modules[active];
   const a = ACCENTS[cur.accent];
+
+  const hasPinnedAviso = useHasPinnedAviso();
+  const hasUpcomingEvent = useHasUpcomingEvent();
+
+  function badgeFor(name: string) {
+    if (name === 'Mural de Avisos') return hasPinnedAviso;
+    if (name === 'Calendário') return hasUpcomingEvent;
+    return false;
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] gap-6 md:gap-10 items-start">
@@ -241,20 +282,18 @@ export function DashboardExplorer({ role }: { role: string }) {
           return (
             <button
               key={m.href}
-              onMouseEnter={() => setActive(i)}
-              onFocus={() => setActive(i)}
               onClick={() => setActive(i)}
               className={`group relative flex items-center gap-3.5 rounded-2xl border px-3 py-2.5 text-left transition-all duration-300
                 ${isActive
-                  ? `${ma.activeBox} shadow-sm`
+                  ? `${ma.activeBox} shadow-md ring-1 ring-black/[0.03] dark:ring-white/[0.03]`
                   : 'border-transparent hover:bg-gray-50 dark:hover:bg-slate-800/50'
                 }`}
             >
               <span
-                className={`absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full transition-all duration-300 ${ma.bar} ${isActive ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full origin-center transition-all duration-300 ${ma.bar} ${isActive ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0'}`}
               />
               <div className={`transition-transform duration-300 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`}>
-                <AppIcon icon={m.icon} accent={m.accent} />
+                <AppIcon icon={m.icon} accent={m.accent} badge={badgeFor(m.name)} />
               </div>
               <div className="min-w-0">
                 <div className={`font-bold text-[15px] leading-tight transition-colors ${isActive ? ma.text : 'text-gray-800 dark:text-slate-100'}`}>

@@ -3,20 +3,21 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { PROFILE_AVATAR_SELECT, profileOutfit, RawProfile } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
 function selectUser() {
-  return { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } as const;
+  return { id: true, name: true, grade: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } as const;
 }
 
-function serializeUser(u: { id: number; name: string; grade: string | null; interactionsProfile: { avatar: string } | null }) {
+function serializeUser(u: { id: number; name: string; grade: string | null; interactionsProfile: RawProfile | null }) {
   return {
     id: u.id,
     name: u.name,
     grade: u.grade,
     gradeLabel: u.grade ? roomLabel(u.grade) : null,
-    avatar: u.interactionsProfile?.avatar ?? null,
+    ...profileOutfit(u.interactionsProfile),
   };
 }
 

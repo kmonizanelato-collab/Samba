@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { X, UserPlus, Inbox, Check, Ban, Clock } from 'lucide-react';
 import { FUNDAMENTAL_ROOMS, MEDIO_ROOMS, roomLabel } from '@/lib/constants';
 import { AnimalAvatar } from './AnimalAvatar';
+import { Outfit } from '@/lib/interactions';
 
 interface FriendUser {
   id: number;
@@ -10,6 +11,7 @@ interface FriendUser {
   grade: string | null;
   gradeLabel: string | null;
   avatar: string | null;
+  outfit?: Outfit | null;
 }
 
 interface PendingRequest {
@@ -106,7 +108,7 @@ export function FriendsPanel({ open, onClose }: Props) {
             {friends.length === 0 && <span className="text-sm text-gray-400 dark:text-slate-500">Nenhum amigo ainda.</span>}
             {friends.map((f) => (
               <div key={f.id} className="flex flex-col items-center gap-1 shrink-0 w-16 hover:scale-105 transition-transform">
-                <AnimalAvatar animal={f.avatar ?? 'monkey'} size={44} animated={false} />
+                <AnimalAvatar animal={f.avatar ?? 'monkey'} outfit={f.outfit ?? undefined} size={44} animated={false} />
                 <span className="text-[10px] text-gray-600 dark:text-slate-300 truncate w-full text-center">{f.name}</span>
               </div>
             ))}
@@ -180,7 +182,7 @@ export function FriendsPanel({ open, onClose }: Props) {
                   <div className="flex flex-col gap-2 mt-2">
                     {sent.map((r) => (
                       <div key={r.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-gray-50 dark:bg-slate-800">
-                        <AnimalAvatar animal={r.user.avatar ?? 'monkey'} size={32} animated={false} />
+                        <AnimalAvatar animal={r.user.avatar ?? 'monkey'} outfit={r.user.outfit ?? undefined} size={32} animated={false} />
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-gray-800 dark:text-slate-100 truncate">{r.user.name}</div>
                           <div className="text-xs text-gray-400 dark:text-slate-500">{r.user.gradeLabel}</div>
@@ -201,7 +203,7 @@ export function FriendsPanel({ open, onClose }: Props) {
               )}
               {received.map((r) => (
                 <div key={r.id} className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50 dark:bg-slate-800">
-                  <AnimalAvatar animal={r.user.avatar ?? 'monkey'} size={40} animated={false} />
+                  <AnimalAvatar animal={r.user.avatar ?? 'monkey'} outfit={r.user.outfit ?? undefined} size={40} animated={false} />
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-gray-800 dark:text-slate-100 truncate">{r.user.name}</div>
                     <div className="text-xs text-gray-400 dark:text-slate-500">{r.user.gradeLabel}</div>

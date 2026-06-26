@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { PROFILE_AVATAR_SELECT, profileOutfit } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +23,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   const group = await prisma.studyGroup.findUnique({
     where: { id: groupId },
     include: {
-      members: { include: { user: { select: { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } } } },
+      members: { include: { user: { select: { id: true, name: true, grade: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } } } },
       messages: {
         orderBy: { createdAt: 'asc' },
-        include: { user: { select: { id: true, name: true, interactionsProfile: { select: { avatar: true } } } } },
+        include: { user: { select: { id: true, name: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } } },
       },
     },
   });
@@ -41,7 +42,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       id: m.user.id,
       name: m.user.name,
       gradeLabel: m.user.grade ? roomLabel(m.user.grade) : null,
-      avatar: m.user.interactionsProfile?.avatar ?? null,
+      ...profileOutfit(m.user.interactionsProfile),
       isOwner: m.user.id === group.ownerId,
     })),
     messages: group.messages.map((msg) => ({
@@ -50,7 +51,7 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
       createdAt: msg.createdAt,
       authorId: msg.user.id,
       author: msg.user.name,
-      avatar: msg.user.interactionsProfile?.avatar ?? null,
+      ...profileOutfit(msg.user.interactionsProfile),
     })),
   });
 }
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
   const msg = await prisma.studyGroupMessage.create({
     data: { groupId, userId, content },
-    include: { user: { select: { id: true, name: true, interactionsProfile: { select: { avatar: true } } } } },
+    include: { user: { select: { id: true, name: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } } },
   });
 
   return NextResponse.json({
@@ -80,7 +81,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     createdAt: msg.createdAt,
     authorId: msg.user.id,
     author: msg.user.name,
-    avatar: msg.user.interactionsProfile?.avatar ?? null,
+    ...profileOutfit(msg.user.interactionsProfile),
   }, { status: 201 });
 }
 

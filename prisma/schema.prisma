@@ -154,6 +154,10 @@ model InteractionsProfile {
   userId    Int      @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   avatar    String
+  hat       String   @default("none")
+  top       String   @default("none")
+  accessory String   @default("none")
+  bg        String   @default("mint")
   createdAt DateTime @default(now())
 }
 
@@ -213,13 +217,15 @@ model StudyGroupMessage {
 }
 
 model StudentAttendance {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  year         Int
-  diasFaltados Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  year          Int
+  bimester      Int
+  diasFaltados  Int      @default(0)
+  diasPrevistos Int      @default(50)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  @@unique([userId, year])
+  @@unique([userId, year, bimester])
 }

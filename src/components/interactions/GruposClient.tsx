@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { Plus, X, Waves, MessagesSquare, Users } from 'lucide-react';
 import { AnimalAvatar } from './AnimalAvatar';
 import { JungleBackground, InteractionsTopBar } from './JungleScene';
+import { Outfit } from '@/lib/interactions';
 
-interface Friend { id: number; name: string; avatar: string | null; }
+interface Friend { id: number; name: string; avatar: string | null; outfit?: Outfit | null; }
 interface GroupCard {
   id: number;
   name: string;
@@ -13,7 +14,7 @@ interface GroupCard {
   subject: string | null;
   memberCount: number;
   messageCount: number;
-  members: { id: number; name: string; avatar: string | null }[];
+  members: { id: number; name: string; avatar: string | null; outfit?: Outfit | null }[];
   lastMessage: { content: string; author: string } | null;
 }
 
@@ -113,7 +114,7 @@ export function GruposClient() {
                   <div className="flex -space-x-2">
                     {g.members.slice(0, 4).map((m) => (
                       <div key={m.id} className="ring-2 ring-white dark:ring-slate-800 rounded-full">
-                        <AnimalAvatar animal={m.avatar ?? 'monkey'} size={26} animated={false} />
+                        <AnimalAvatar animal={m.avatar ?? 'monkey'} outfit={m.outfit ?? undefined} size={26} animated={false} />
                       </div>
                     ))}
                   </div>
@@ -163,7 +164,7 @@ export function GruposClient() {
                   return (
                     <button type="button" key={f.id} onClick={() => setSelected((s) => on ? s.filter((x) => x !== f.id) : [...s, f.id])}
                       className={`flex items-center gap-2.5 p-2 rounded-xl border transition-all ${on ? 'border-teal-300 bg-teal-50 dark:bg-teal-900/20' : 'border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800'}`}>
-                      <AnimalAvatar animal={f.avatar ?? 'monkey'} size={30} animated={false} />
+                      <AnimalAvatar animal={f.avatar ?? 'monkey'} outfit={f.outfit ?? undefined} size={30} animated={false} />
                       <span className="text-sm font-medium text-gray-800 dark:text-slate-100 flex-1 text-left">{f.name}</span>
                       <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${on ? 'bg-teal-500 border-teal-500' : 'border-gray-300 dark:border-slate-600'}`}>
                         {on && <span className="text-white text-[11px]">✓</span>}

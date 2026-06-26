@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const [grades, attendance, user] = await Promise.all([
     prisma.grade.findMany({ where: { userId: targetId }, orderBy: { subject: 'asc' } }),
-    prisma.studentAttendance.findFirst({ where: { userId: targetId, year: 2026 } }),
+    prisma.studentAttendance.findMany({ where: { userId: targetId, year: 2026 }, orderBy: { bimester: 'asc' } }),
     prisma.user.findUnique({ where: { id: targetId }, select: { name: true, grade: true, level: true } }),
   ]);
 
@@ -33,13 +33,22 @@ export async function PUT(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { userId, subject, bimester, nota, faltas, ac, aulasMinistradas, diasFaltados } = body;
+  const { userId, subject, bimester, nota, faltas, ac, aulasMinistradas, diasFaltados, diasPrevistos } = body;
 
-  if (diasFaltados !== undefined) {
+  if (diasFaltados !== undefined || diasPrevistos !== undefined) {
     const att = await prisma.studentAttendance.upsert({
-      where: { userId_year: { userId: parseInt(userId), year: 2026 } },
-      update: { diasFaltados: parseInt(diasFaltados) },
-      create: { userId: parseInt(userId), year: 2026, diasFaltados: parseInt(diasFaltados) },
+      where: { userId_year_bimester: { userId: parseInt(userId), year: 2026, bimester: parseInt(bimester) } },
+      update: {
+        diasFaltados: diasFaltados !== undefined ? parseInt(diasFaltados) : undefined,
+        diasPrevistos: diasPrevistos !== undefined ? parseInt(diasPrevistos) : undefined,
+      },
+      create: {
+        userId: parseInt(userId),
+        year: 2026,
+        bimester: parseInt(bimester),
+        diasFaltados: diasFaltados !== undefined ? parseInt(diasFaltados) : 0,
+        diasPrevistos: diasPrevistos !== undefined ? parseInt(diasPrevistos) : 50,
+      },
     });
     return NextResponse.json(att);
   }

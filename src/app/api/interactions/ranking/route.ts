@@ -36,7 +36,7 @@ export async function GET() {
       id: true,
       name: true,
       grade: true,
-      interactionsProfile: { select: { avatar: true } },
+      interactionsProfile: { select: { avatar: true, hat: true, top: true, accessory: true, bg: true } },
       grades: { select: { nota: true } },
     },
   });
@@ -54,6 +54,9 @@ export async function GET() {
         grade: p.grade,
         gradeLabel: p.grade ? roomLabel(p.grade) : null,
         avatar: p.interactionsProfile?.avatar ?? null,
+        outfit: p.interactionsProfile
+          ? { hat: p.interactionsProfile.hat, top: p.interactionsProfile.top, accessory: p.interactionsProfile.accessory, bg: p.interactionsProfile.bg }
+          : null,
         average,
         points,
         isMe: p.id === userId,

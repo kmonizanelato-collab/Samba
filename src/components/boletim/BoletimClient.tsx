@@ -1,9 +1,10 @@
 'use client';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Session } from 'next-auth';
-import { ClipboardList, Edit3, Check, X, Users, UserCog } from 'lucide-react';
+import { ClipboardList, Edit3, Check, X, Users, UserCog, Sparkles } from 'lucide-react';
 import { getSubjects, roomLabel } from '@/lib/constants';
-import { calcFrequencia, calcFreqAnual, getCFColor, getFreqColor, getGradeColor } from '@/lib/utils';
+import { calcFrequencia, calcFreqBimestre, getCFColor, getFreqColor, getGradeColor } from '@/lib/utils';
+import { getAttendanceMessage } from '@/lib/ai/attendance';
 import { StudentSelector, StudentOption } from '@/components/StudentSelector';
 
 interface Grade {
@@ -18,7 +19,9 @@ interface Grade {
 
 interface Attendance {
   id: number;
+  bimester: number;
   diasFaltados: number;
+  diasPrevistos: number;
 }
 
 interface Props {
@@ -90,11 +93,9 @@ export function BoletimClient({ session }: Props) {
   );
   const [selectedLevel, setSelectedLevel] = useState<string>(session.user.level ?? 'MEDIO');
   const [grades, setGrades] = useState<Grade[]>([]);
-  const [attendance, setAttendance] = useState<Attendance | null>(null);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [studentInfo, setStudentInfo] = useState<{ name: string; grade: string; level: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [editDias, setEditDias] = useState(false);
-  const [diasDraft, setDiasDraft] = useState('');
   const [selectorOpen, setSelectorOpen] = useState(isTeacherOrAdmin);
 
   const selectedStudent = students.find((s) => s.id === selectedUserId) ?? null;
@@ -110,7 +111,7 @@ export function BoletimClient({ session }: Props) {
   const loadData = useCallback(async () => {
     if (!selectedUserId) {
       setGrades([]);
-      setAttendance(null);
+      setAttendance([]);
       setStudentInfo(null);
       return;
     }
@@ -118,7 +119,7 @@ export function BoletimClient({ session }: Props) {
     const res = await fetch(`/api/boletim?userId=${selectedUserId}`);
     const data = await res.json();
     setGrades(data.grades ?? []);
-    setAttendance(data.attendance ?? null);
+    setAttendance(data.attendance ?? []);
     setStudentInfo(data.user ?? null);
     setLoading(false);
   }, [selectedUserId]);
@@ -141,18 +142,23 @@ export function BoletimClient({ session }: Props) {
     loadData();
   }
 
-  async function updateDias(dias: number) {
+  async function updateAttendance(bimester: number, field: 'diasFaltados' | 'diasPrevistos', value: number) {
+    if (!canEdit) return;
     await fetch('/api/boletim', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: selectedUserId, diasFaltados: dias }),
+      body: JSON.stringify({ userId: selectedUserId, bimester, [field]: value }),
     });
-    setEditDias(false);
     loadData();
   }
 
-  const diasFaltados = attendance?.diasFaltados ?? 0;
-  const freqAnual = calcFreqAnual(diasFaltados);
+  function getAttendance(bimester: number): Attendance | undefined {
+    return attendance.find((a) => a.bimester === bimester);
+  }
+
+  const diasFaltadosTotal = [1, 2, 3, 4].reduce((sum, b) => sum + (getAttendance(b)?.diasFaltados ?? 0), 0);
+  const diasPrevistosTotal = [1, 2, 3, 4].reduce((sum, b) => sum + (getAttendance(b)?.diasPrevistos ?? 50), 0);
+  const freqAnual = calcFreqBimestre(diasFaltadosTotal, diasPrevistosTotal);
   const needsStudent = isTeacherOrAdmin && !selectedUserId;
 
   return (
@@ -220,36 +226,10 @@ export function BoletimClient({ session }: Props) {
               </div>
               <div className="ml-auto flex items-center gap-2">
                 <span className="text-gray-500 dark:text-slate-400">Freq. Anual: </span>
-                {editDias && canEdit ? (
-                  <span className="flex items-center gap-1">
-                    <span className="text-xs text-gray-500">dias faltados:</span>
-                    <input
-                      autoFocus
-                      type="number"
-                      className="w-16 text-center text-xs rounded border border-blue-300 dark:border-blue-600 bg-white dark:bg-slate-700 py-0.5 focus:outline-none"
-                      value={diasDraft}
-                      min="0"
-                      max="200"
-                      onChange={(e) => setDiasDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') updateDias(parseInt(diasDraft) || 0);
-                        if (e.key === 'Escape') setEditDias(false);
-                      }}
-                    />
-                    <button onClick={() => updateDias(parseInt(diasDraft) || 0)}><Check size={14} className="text-green-600" /></button>
-                    <button onClick={() => setEditDias(false)}><X size={14} className="text-red-500" /></button>
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1">
-                    <span className={`font-bold text-base ${getFreqColor(freqAnual)}`}>{freqAnual}%</span>
-                    <span className="text-xs text-gray-400">({diasFaltados} dias faltados)</span>
-                    {canEdit && (
-                      <button onClick={() => { setEditDias(true); setDiasDraft(String(diasFaltados)); }} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
-                        <Edit3 size={12} className="text-gray-400" />
-                      </button>
-                    )}
-                  </span>
-                )}
+                <span className="flex items-center gap-1">
+                  <span className={`font-bold text-base ${getFreqColor(freqAnual)}`}>{freqAnual}%</span>
+                  <span className="text-xs text-gray-400">({diasFaltadosTotal} dias faltados)</span>
+                </span>
               </div>
             </div>
           )}
@@ -355,13 +335,57 @@ export function BoletimClient({ session }: Props) {
             </table>
           </div>
 
+          {/* Frequência por Bimestre (IA) */}
+          <div className="mt-6">
+            <h3 className="text-sm font-bold text-gray-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+              <Sparkles size={15} className="text-purple-500" /> Frequência por Bimestre
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((bimester) => {
+                const att = getAttendance(bimester);
+                const diasFaltados = att?.diasFaltados ?? 0;
+                const diasPrevistos = att?.diasPrevistos ?? 50;
+                const ai = getAttendanceMessage(diasFaltados, diasPrevistos);
+                const borderColor =
+                  ai.status === 'excelente' ? 'border-green-500' :
+                  ai.status === 'ok' ? 'border-blue-500' :
+                  ai.status === 'risco' ? 'border-yellow-500' : 'border-red-500';
+
+                return (
+                  <div key={bimester} className={`card p-4 border-l-4 ${borderColor}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-semibold text-gray-500 dark:text-slate-400">{bimester}º Bimestre</span>
+                      <span className={`font-bold text-lg ${getFreqColor(ai.frequencia)}`}>{ai.frequencia}%</span>
+                    </div>
+                    <div className="text-xs text-gray-400 dark:text-slate-500 mb-3 flex items-center gap-1">
+                      {canEdit ? (
+                        <>
+                          <EditableCell value={diasFaltados} onSave={(v) => updateAttendance(bimester, 'diasFaltados', v ?? 0)} step="1" min="0" max="999" />
+                          <span>/</span>
+                          <EditableCell value={diasPrevistos} onSave={(v) => updateAttendance(bimester, 'diasPrevistos', v ?? 50)} step="1" min="1" max="999" />
+                          <span>dias faltados/previstos</span>
+                        </>
+                      ) : (
+                        <span>{diasFaltados}/{diasPrevistos} dias faltados/previstos</span>
+                      )}
+                    </div>
+                    <div className="rounded-xl bg-purple-50 dark:bg-purple-900/15 border border-purple-100 dark:border-purple-800/30 p-2.5 flex gap-2">
+                      <Sparkles size={14} className="text-purple-500 shrink-0 mt-0.5" />
+                      <p className="text-xs leading-snug text-purple-800 dark:text-purple-300">{ai.mensagem}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Summary cards */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className={`card p-5 border-l-4 ${freqAnual >= 90 ? 'border-green-500' : freqAnual >= 75 ? 'border-yellow-500' : 'border-red-500'}`}>
               <div className="text-xs text-gray-500 dark:text-slate-400 mb-1">Frequência Anual</div>
               <div className={`text-3xl font-bold ${getFreqColor(freqAnual)}`}>{freqAnual}%</div>
               <div className="text-xs text-gray-400 dark:text-slate-500 mt-1">
-                {diasFaltados} dias faltados · 1800 aulas no ano
+                {diasFaltadosTotal} dias faltados · {diasPrevistosTotal} dias previstos no ano
               </div>
               {freqAnual < 75 && (
                 <div className="mt-2 text-xs font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-2 py-1">

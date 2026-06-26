@@ -2,116 +2,186 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session } from 'next-auth';
-import { Compass, Sparkles, BookOpen, CalendarX2 } from 'lucide-react';
-import { JUNGLE_ANIMALS } from '@/lib/interactions';
-import { AnimalAvatar } from './AnimalAvatar';
-import { JungleBackground } from './JungleScene';
-
-interface Me {
-  name: string;
-  gradeLabel: string | null;
-  boletim: { average: number | null; totalFaltas: number; subjectsCount: number };
-}
+import { Sparkles, Shirt, Crown, Glasses, Palette, Check } from 'lucide-react';
+import {
+  JUNGLE_ANIMALS,
+  HATS,
+  TOPS,
+  ACCESSORIES,
+  BG_OPTIONS,
+  DEFAULT_OUTFIT,
+  Outfit,
+  OutfitOption,
+} from '@/lib/interactions';
+import { CharacterAvatar } from './CharacterAvatar';
 
 interface Props {
   session: Session;
 }
 
+type TabKey = 'hat' | 'top' | 'accessory' | 'bg';
+
+const TABS: { key: TabKey; label: string; icon: React.ElementType; options: OutfitOption[] }[] = [
+  { key: 'hat', label: 'Chapéu', icon: Crown, options: HATS },
+  { key: 'top', label: 'Roupa', icon: Shirt, options: TOPS },
+  { key: 'accessory', label: 'Acessório', icon: Glasses, options: ACCESSORIES },
+  { key: 'bg', label: 'Fundo', icon: Palette, options: BG_OPTIONS },
+];
+
 export function AvatarOnboarding({ session }: Props) {
   const router = useRouter();
-  const [me, setMe] = useState<Me | null>(null);
-  const [chosen, setChosen] = useState<string | null>(null);
+  const [animal, setAnimal] = useState<string>('lion');
+  const [outfit, setOutfit] = useState<Outfit>({ ...DEFAULT_OUTFIT });
+  const [tab, setTab] = useState<TabKey>('hat');
   const [saving, setSaving] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('/api/interactions/me').then((r) => r.json()).then(setMe);
+    fetch('/api/interactions/profile')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.profile) {
+          setAnimal(d.profile.avatar);
+          setOutfit({
+            hat: d.profile.hat ?? 'none',
+            top: d.profile.top ?? 'none',
+            accessory: d.profile.accessory ?? 'none',
+            bg: d.profile.bg ?? 'mint',
+          });
+          setIsEdit(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  async function confirm() {
-    if (!chosen) return;
+  async function save() {
     setSaving(true);
     setError('');
     const res = await fetch('/api/interactions/profile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avatar: chosen }),
+      body: JSON.stringify({ avatar: animal, ...outfit }),
     });
     if (res.ok) {
       router.push('/interactions');
       router.refresh();
     } else {
       setSaving(false);
-      setError('Não foi possível salvar seu avatar. Tente novamente.');
+      setError('Não foi possível salvar. Tente novamente.');
     }
   }
 
+  const activeTab = TABS.find((t) => t.key === tab)!;
+  const animalLabel = JUNGLE_ANIMALS.find((a) => a.key === animal)?.label ?? '';
+
   return (
-    <main className="jungle-scene min-h-screen relative overflow-hidden flex flex-col items-center px-4 py-10 sm:py-14">
-      <JungleBackground />
-
-      <div className="jungle-pop relative z-10 w-full max-w-2xl rounded-3xl glass shadow-2xl p-6 sm:p-8">
-        <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold">
-          <Compass size={20} className="j-float" />
-          <span className="text-xs uppercase tracking-widest">Ficha do explorador</span>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-slate-50 mt-1">
-          Bem-vindo(a) à selva, {session.user.name}!
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-          {me?.gradeLabel ?? '...'} · seus dados do Samba já estão aqui
-        </p>
-
-        <div className="grid grid-cols-3 gap-3 mt-5">
-          {[
-            { icon: BookOpen, box: 'bg-emerald-50 dark:bg-emerald-900/20', ic: 'text-emerald-600 dark:text-emerald-400', value: me?.boletim.average != null ? me.boletim.average.toFixed(1) : '—', label: 'média geral' },
-            { icon: CalendarX2, box: 'bg-amber-50 dark:bg-amber-900/20', ic: 'text-amber-600 dark:text-amber-400', value: me?.boletim.totalFaltas ?? '—', label: 'faltas no total' },
-            { icon: Sparkles, box: 'bg-sky-50 dark:bg-sky-900/20', ic: 'text-sky-600 dark:text-sky-400', value: me?.boletim.subjectsCount ?? '—', label: 'matérias' },
-          ].map((s, i) => {
-            const Icon = s.icon;
-            return (
-              <div key={i} className={`j-fade-up rounded-2xl ${s.box} p-3 text-center`} style={{ animationDelay: `${0.1 + i * 0.08}s` }}>
-                <Icon size={18} className={`mx-auto ${s.ic}`} />
-                <div className="text-lg font-bold text-gray-900 dark:text-slate-50 mt-1">{s.value}</div>
-                <div className="text-[11px] text-gray-500 dark:text-slate-400">{s.label}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        <h2 className="text-base font-bold text-gray-800 dark:text-slate-100 mt-7">Escolha seu animal da selva</h2>
-        <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 mb-4">
-          Esse será o seu personagem dentro do Samba Interactions.
-        </p>
-
-        <div className="grid grid-cols-4 gap-3 sm:gap-4">
-          {JUNGLE_ANIMALS.map((a, i) => (
-            <div key={a.key} className="flex flex-col items-center gap-1.5 j-fade-up" style={{ animationDelay: `${0.2 + i * 0.05}s` }}>
-              <AnimalAvatar animal={a.key} size={64} selected={chosen === a.key} glow={chosen === a.key} onClick={() => setChosen(a.key)} />
-              <span className={`text-[11px] font-semibold transition-colors ${chosen === a.key ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-slate-300'}`}>{a.label}</span>
+    <main className="min-h-screen relative overflow-hidden bg-gradient-to-br from-amber-100 via-rose-50 to-emerald-100 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 px-4 py-8 sm:py-12 flex items-center justify-center">
+      <div className="jungle-pop w-full max-w-4xl rounded-3xl bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
+        <div className="grid md:grid-cols-[300px_1fr]">
+          {/* Preview */}
+          <div className="relative bg-gradient-to-b from-emerald-400/20 to-teal-500/10 dark:from-emerald-500/10 dark:to-teal-500/5 p-6 flex flex-col items-center justify-center gap-3 border-b md:border-b-0 md:border-r border-black/5 dark:border-white/10">
+            <div className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold uppercase tracking-widest">
+              <Sparkles size={13} /> Seu personagem
             </div>
-          ))}
+            <div className="j-float drop-shadow-xl">
+              <CharacterAvatar animal={animal} outfit={outfit} size={200} />
+            </div>
+            <div className="text-center">
+              <div className="font-extrabold text-lg text-gray-900 dark:text-slate-50">{session.user.name}</div>
+              <div className="text-sm text-gray-500 dark:text-slate-400">{animalLabel} · {session.user.grade}</div>
+            </div>
+          </div>
+
+          {/* Controles */}
+          <div className="p-6 sm:p-7">
+            <h1 className="text-2xl font-extrabold text-gray-900 dark:text-slate-50">
+              {isEdit ? 'Personalizar visual' : 'Monte seu personagem'}
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-0.5 mb-4">
+              Escolha o animal e capriche no look — ele vira sua foto de perfil.
+            </p>
+
+            {/* Seletor de animal */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              {JUNGLE_ANIMALS.map((a) => (
+                <button
+                  key={a.key}
+                  onClick={() => setAnimal(a.key)}
+                  title={a.label}
+                  className={`shrink-0 rounded-2xl p-0.5 transition-all ${
+                    animal === a.key ? 'ring-2 ring-emerald-500 scale-105' : 'ring-1 ring-black/5 dark:ring-white/10 opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  <CharacterAvatar animal={a.key} outfit={{ bg: outfit.bg }} size={52} className="rounded-2xl" />
+                </button>
+              ))}
+            </div>
+
+            {/* Abas */}
+            <div className="flex gap-1.5 mt-4 mb-3 bg-gray-100 dark:bg-slate-800 rounded-xl p-1">
+              {TABS.map((t) => {
+                const Icon = t.icon;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold transition-all ${
+                      tab === t.key
+                        ? 'bg-white dark:bg-slate-700 shadow text-emerald-700 dark:text-emerald-300'
+                        : 'text-gray-500 dark:text-slate-400 hover:text-gray-700'
+                    }`}
+                  >
+                    <Icon size={15} /> <span className="hidden sm:inline">{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Opções da aba */}
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2.5 max-h-[260px] overflow-y-auto pr-1">
+              {activeTab.options.map((opt) => {
+                const selected = outfit[tab] === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => setOutfit((o) => ({ ...o, [tab]: opt.key }))}
+                    title={opt.label}
+                    className={`relative rounded-2xl p-1.5 flex flex-col items-center gap-1 border-2 transition-all ${
+                      selected
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'border-transparent bg-gray-50 dark:bg-slate-800/60 hover:bg-gray-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {selected && (
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow">
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                    )}
+                    {tab === 'bg' ? (
+                      <span className="w-11 h-11 rounded-full shadow-inner" style={{ background: opt.swatch }} />
+                    ) : (
+                      <CharacterAvatar animal={animal} outfit={{ ...outfit, [tab]: opt.key }} size={52} />
+                    )}
+                    <span className="text-[10px] font-medium text-gray-600 dark:text-slate-300 leading-tight text-center truncate w-full">
+                      {opt.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {error && <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">{error}</div>}
+
+            <button
+              onClick={save}
+              disabled={saving}
+              className="w-full mt-5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+            >
+              {saving ? 'Salvando...' : isEdit ? 'Salvar visual ✨' : 'Entrar no chalé 🏕️'}
+            </button>
+          </div>
         </div>
-
-        {chosen && (
-          <p className="text-center text-sm text-emerald-700 dark:text-emerald-400 mt-4 font-semibold j-fade-up">
-            ✨ {JUNGLE_ANIMALS.find((a) => a.key === chosen)?.habitat}
-          </p>
-        )}
-
-        {error && <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">{error}</div>}
-
-        <button
-          onClick={confirm}
-          disabled={!chosen || saving}
-          className={`w-full mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-emerald-500/30 transition-all duration-200 active:scale-95 ${chosen ? 'j-pulse' : ''}`}
-        >
-          {saving ? 'Entrando na selva...' : 'Entrar na selva 🌴'}
-        </button>
-
-        <p className="text-center text-[11px] text-gray-400 dark:text-slate-500 mt-4">
-          Ícones de animais: Twemoji (CC-BY 4.0)
-        </p>
       </div>
     </main>
   );

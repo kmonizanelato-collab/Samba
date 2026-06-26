@@ -4,55 +4,30 @@
 
 .jungle-scene {
   position: relative;
-  background:
-    radial-gradient(120% 90% at 50% -10%, #ffe9b0 0%, rgba(255, 233, 176, 0) 45%),
-    linear-gradient(180deg, #8fd3ff 0%, #a7e3d6 32%, #5fb277 60%, #2f7d4a 82%, #1f5e38 100%);
-}
-.jungle-scene::before {
-  /* brilho do sol */
-  content: '';
-  position: absolute;
-  top: -120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 360px;
-  height: 360px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgba(255, 244, 200, 0.95) 0%, rgba(255, 236, 160, 0.45) 35%, rgba(255, 236, 160, 0) 70%);
-  animation: sunPulse 7s ease-in-out infinite;
-  pointer-events: none;
+  background: #1a1410;
 }
 
-@keyframes sunPulse {
-  0%, 100% { opacity: 0.85; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+/* ===========================================================
+   Cena ilustrada do chalé (fogo + luzinhas)
+   =========================================================== */
+@keyframes chaletFire {
+  0%, 100% { transform: scaleY(1) scaleX(1); opacity: 1; }
+  50% { transform: scaleY(1.08) scaleX(0.96); opacity: 0.92; }
+}
+.chalet-fire {
+  transform-origin: 660px 360px;
+  animation: chaletFire 0.9s ease-in-out infinite;
 }
 
-/* Colinas em camadas (parallax sutil) */
-.jungle-hills {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
+@keyframes chaletBulb {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
 }
-.jungle-hill {
-  position: absolute;
-  left: -10%;
-  width: 120%;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+.chalet-bulb {
+  animation: chaletBulb 2.4s ease-in-out infinite;
 }
 
-/* Nuvens */
-@keyframes cloudDrift {
-  from { transform: translateX(-14%); }
-  to { transform: translateX(14%); }
-}
-.jungle-cloud {
-  animation: cloudDrift 20s ease-in-out infinite alternate;
-  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.06));
-}
-
-/* Vaga-lumes / partículas */
+/* Partículas (faíscas quentes perto da lareira) */
 @keyframes firefly {
   0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
   20% { opacity: 1; }
@@ -68,17 +43,6 @@
   background: radial-gradient(circle, #fff7c2 0%, #ffe27a 50%, rgba(255, 226, 122, 0) 70%);
   box-shadow: 0 0 8px 2px rgba(255, 226, 122, 0.7);
   animation: firefly 6s ease-in-out infinite;
-}
-
-/* Folhas e árvores */
-@keyframes leafSway {
-  0%, 100% { transform: rotate(-5deg); }
-  50% { transform: rotate(5deg); }
-}
-.jungle-leaf {
-  animation: leafSway 4.5s ease-in-out infinite;
-  transform-origin: bottom center;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
 }
 
 /* Avatar idle */
@@ -100,13 +64,6 @@
   50% { transform: translateX(-50%) scale(0.86); opacity: 0.18; }
 }
 .jungle-shadow { animation: shadowPulse 2.6s ease-in-out infinite; }
-
-/* Fumaça da chaminé */
-@keyframes smokeRise {
-  0% { transform: translateY(0) scale(1); opacity: 0.5; }
-  100% { transform: translateY(-26px) scale(1.5); opacity: 0; }
-}
-.jungle-smoke { animation: smokeRise 2.8s ease-out infinite; }
 
 /* Entradas */
 @keyframes popIn {
@@ -180,7 +137,7 @@
 .j-pulse { animation: pressInfinite 2s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .jungle-cloud, .firefly, .jungle-leaf, .jungle-idle, .jungle-sway,
-  .jungle-shadow, .jungle-smoke, .j-float, .j-glow, .j-shimmer,
-  .jungle-scene::before, .j-pulse { animation: none !important; }
+  .firefly, .jungle-idle, .jungle-sway,
+  .jungle-shadow, .j-float, .j-glow, .j-shimmer,
+  .j-pulse, .chalet-fire, .chalet-bulb { animation: none !important; }
 }

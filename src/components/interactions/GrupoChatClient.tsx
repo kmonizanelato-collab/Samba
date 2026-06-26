@@ -3,9 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Send, Users, Crown } from 'lucide-react';
 import { AnimalAvatar } from './AnimalAvatar';
+import { Outfit } from '@/lib/interactions';
 
-interface Member { id: number; name: string; gradeLabel: string | null; avatar: string | null; isOwner: boolean; }
-interface Message { id: number; content: string; createdAt: string; authorId: number; author: string; avatar: string | null; }
+interface Member { id: number; name: string; gradeLabel: string | null; avatar: string | null; outfit?: Outfit | null; isOwner: boolean; }
+interface Message { id: number; content: string; createdAt: string; authorId: number; author: string; avatar: string | null; outfit?: Outfit | null; }
 interface GroupData { id: number; name: string; emoji: string; subject: string | null; members: Member[]; messages: Message[]; }
 
 export function GrupoChatClient({ groupId, currentUserId }: { groupId: number; currentUserId: number }) {
@@ -84,7 +85,7 @@ export function GrupoChatClient({ groupId, currentUserId }: { groupId: number; c
             {group.members.map((m) => (
               <div key={m.id} className="flex flex-col items-center gap-1 shrink-0 w-16">
                 <div className="relative">
-                  <AnimalAvatar animal={m.avatar ?? 'monkey'} size={42} animated={false} />
+                  <AnimalAvatar animal={m.avatar ?? 'monkey'} outfit={m.outfit ?? undefined} size={42} animated={false} />
                   {m.isOwner && <Crown size={13} className="absolute -top-1.5 -right-1 text-amber-400" />}
                 </div>
                 <span className="text-[10px] text-gray-600 dark:text-slate-300 truncate w-full text-center">{m.name}</span>
@@ -107,7 +108,7 @@ export function GrupoChatClient({ groupId, currentUserId }: { groupId: number; c
             const mine = m.authorId === currentUserId;
             return (
               <div key={m.id} className={`flex items-end gap-2 j-fade-up ${mine ? 'flex-row-reverse' : ''}`}>
-                <AnimalAvatar animal={m.avatar ?? 'monkey'} size={32} animated={false} />
+                <AnimalAvatar animal={m.avatar ?? 'monkey'} outfit={m.outfit ?? undefined} size={32} animated={false} />
                 <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 shadow ${mine ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white rounded-br-sm' : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-bl-sm'}`}>
                   {!mine && <div className="text-[11px] font-bold text-teal-600 dark:text-teal-400 mb-0.5">{m.author}</div>}
                   <p className="text-sm whitespace-pre-wrap break-words">{m.content}</p>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { PROFILE_AVATAR_SELECT, profileOutfit } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function GET() {
   const groups = await prisma.studyGroup.findMany({
     where: { members: { some: { userId } } },
     include: {
-      members: { include: { user: { select: { id: true, name: true, interactionsProfile: { select: { avatar: true } } } } } },
+      members: { include: { user: { select: { id: true, name: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 1, include: { user: { select: { name: true } } } },
       _count: { select: { messages: true, members: true } },
     },
@@ -30,7 +31,7 @@ export async function GET() {
       ownerId: g.ownerId,
       memberCount: g._count.members,
       messageCount: g._count.messages,
-      members: g.members.map((m) => ({ id: m.user.id, name: m.user.name, avatar: m.user.interactionsProfile?.avatar ?? null })),
+      members: g.members.map((m) => ({ id: m.user.id, name: m.user.name, ...profileOutfit(m.user.interactionsProfile) })),
       lastMessage: g.messages[0]
         ? { content: g.messages[0].content, author: g.messages[0].user.name, createdAt: g.messages[0].createdAt }
         : null,

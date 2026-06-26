@@ -13,5 +13,12 @@ export default async function InteractionsPage() {
   });
   if (!profile) redirect('/interactions/avatar');
 
-  return <InteractionsHome session={session} avatar={profile.avatar} />;
+  const outfit = {
+    hat: profile.hat,
+    top: profile.top,
+    accessory: profile.accessory,
+    bg: profile.bg,
+  };
+
+  return <InteractionsHome session={session} avatar={profile.avatar} outfit={outfit} />;
 }

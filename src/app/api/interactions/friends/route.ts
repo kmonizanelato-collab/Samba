@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { roomLabel } from '@/lib/constants';
+import { PROFILE_AVATAR_SELECT, profileOutfit } from '@/lib/interactions';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,8 +19,8 @@ export async function GET() {
       OR: [{ fromUserId: userId }, { toUserId: userId }],
     },
     include: {
-      fromUser: { select: { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } },
-      toUser: { select: { id: true, name: true, grade: true, interactionsProfile: { select: { avatar: true } } } },
+      fromUser: { select: { id: true, name: true, grade: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } },
+      toUser: { select: { id: true, name: true, grade: true, interactionsProfile: { select: PROFILE_AVATAR_SELECT } } },
     },
   });
 
@@ -30,7 +31,7 @@ export async function GET() {
       name: friendUser.name,
       grade: friendUser.grade,
       gradeLabel: friendUser.grade ? roomLabel(friendUser.grade) : null,
-      avatar: friendUser.interactionsProfile?.avatar ?? null,
+      ...profileOutfit(friendUser.interactionsProfile),
     };
   });
 

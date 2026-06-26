@@ -33,6 +33,14 @@ export function calcFreqAnual(diasFaltados: number): number {
   return Math.round(((totalAulas - faltasAulas) / totalAulas) * 100);
 }
 
+export function calcFreqBimestre(diasFaltados: number, diasPrevistos: number): number {
+  if (diasPrevistos === 0) return 100;
+  return Math.round(((diasPrevistos - diasFaltados) / diasPrevistos) * 100);
+}
+
+export const FREQ_MINIMA = 75;
+export const FREQ_EXCELENCIA = 80;
+
 export function getFreqColor(freq: number): string {
   if (freq >= 90) return 'text-green-600 dark:text-green-400';
   if (freq >= 75) return 'text-yellow-600 dark:text-yellow-400';
